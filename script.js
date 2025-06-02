@@ -354,6 +354,9 @@ if (fileBtn && fileInput) {
                     const successMsg = `題庫載入成功，共 ${questions.length} 題`;
                     fileStatus.className = 'file-status success';
                     fileStatus.textContent = successMsg;
+                    setTimeout(() => {
+                        fileStatus.style.display = 'none';
+                    }, 3000);
                     
                     // 啟用開始按鈕
                     startBtn.disabled = false;
@@ -363,6 +366,9 @@ if (fileBtn && fileInput) {
                     fileStatus.className = 'file-status error';
                     fileStatus.textContent = `載入失敗：${error.message}`;
                     console.error('載入題庫失敗:', error);
+                    setTimeout(() => {
+                        fileStatus.style.display = 'none';
+                    }, 3000);
                 }
             };
             
@@ -370,10 +376,6 @@ if (fileBtn && fileInput) {
                 fileStatus.className = 'file-status error';
                 fileStatus.textContent = '讀取檔案時發生錯誤';
                 console.error('讀取檔案失敗:', error);
-            };
-            
-            reader.onloadend = function () {
-                // 避免狀態訊息過快消失
                 setTimeout(() => {
                     fileStatus.style.display = 'none';
                 }, 3000);
@@ -386,6 +388,9 @@ if (fileBtn && fileInput) {
                 fileStatus.className = 'file-status error';
                 fileStatus.textContent = '讀取檔案失敗，請確認檔案格式正確';
                 console.error('讀取檔案失敗:', error);
+                setTimeout(() => {
+                    fileStatus.style.display = 'none';
+                }, 3000);
             }      }
     });
 }

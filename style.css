@@ -20,8 +20,8 @@ body {
 }
 
 .ipad-panel {
-    width: 30%;
-    min-width: 300px;
+    width: 24%;
+    min-width: 240px;
     background: var(--bg-card);
     box-shadow: var(--shadow);
     padding: 1rem;
@@ -193,18 +193,19 @@ input[type="number"]:focus {
 /* 檔案選擇按鈕樣式 */
 .file-btn {
     @extend .btn;
-    @extend .btn-secondary;
-    width: 100%;
+    @extend .btn-primary;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    position: relative;
 }
 
 .file-btn::after {
     content: '↑';
     font-size: 0.9rem;
     margin-left: 0.5rem;
+    color: white;
 }
 
 .file-btn:hover::after {
@@ -212,6 +213,20 @@ input[type="number"]:focus {
 }
 
 .file-btn:active::after {
+    transform: translateY(0);
+}
+
+.file-btn input[type="file"] {
+    display: none;
+}
+
+.file-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.file-btn:active {
+    background: var(--primary-dark);
     transform: translateY(0);
 }
 
