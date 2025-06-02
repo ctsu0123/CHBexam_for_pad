@@ -291,6 +291,13 @@ if (fileBtn && fileInput) {
             
             // 讀取Excel檔案
             const reader = new FileReader();
+            const fileStatus = document.getElementById('file-status');
+            
+            // 顯示讀取狀態
+            fileStatus.className = 'file-status warning';
+            fileStatus.textContent = '正在載入檔案...';
+            fileStatus.style.display = 'block';
+            
             reader.onload = function (evt) {
                 try {
                     const data = evt.target.result;
@@ -345,26 +352,41 @@ if (fileBtn && fileInput) {
                     
                     // 顯示成功訊息
                     const successMsg = `題庫載入成功，共 ${questions.length} 題`;
-                    alert(successMsg);
+                    fileStatus.className = 'file-status success';
+                    fileStatus.textContent = successMsg;
                     
                     // 啟用開始按鈕
                     startBtn.disabled = false;
                     startBtn.style.backgroundColor = '';
                     
                 } catch (error) {
-                    alert(`載入題庫失敗：${error.message}`);
+                    fileStatus.className = 'file-status error';
+                    fileStatus.textContent = `載入失敗：${error.message}`;
                     console.error('載入題庫失敗:', error);
                 }
+            };
+            
+            reader.onerror = function (error) {
+                fileStatus.className = 'file-status error';
+                fileStatus.textContent = '讀取檔案時發生錯誤';
+                console.error('讀取檔案失敗:', error);
+            };
+            
+            reader.onloadend = function () {
+                // 避免狀態訊息過快消失
+                setTimeout(() => {
+                    fileStatus.style.display = 'none';
+                }, 3000);
             };
             
             // 使用更穩定的讀取方式
             try {
                 reader.readAsBinaryString(e.target.files[0]);
             } catch (error) {
-                alert('讀取檔案失敗，請確認檔案格式正確');
+                fileStatus.className = 'file-status error';
+                fileStatus.textContent = '讀取檔案失敗，請確認檔案格式正確';
                 console.error('讀取檔案失敗:', error);
-            }
-        }
+            }      }
     });
 }
 
