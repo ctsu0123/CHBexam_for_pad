@@ -15,19 +15,30 @@ body {
 /* iPad 專用樣式 */
 .ipad-container {
     display: flex;
-    flex-direction: column;
     height: 100vh;
     overflow: hidden;
 }
 
 .ipad-panel {
-    width: 100%;
+    width: 30%;
+    min-width: 300px;
     background: var(--bg-card);
     box-shadow: var(--shadow);
     padding: 1rem;
     border-radius: var(--radius);
-    margin-bottom: 1rem;
+    margin-right: 1rem;
+    flex: 0 0 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 右側內容區塊 */
+#right-panel {
     flex: 1;
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    padding: 1rem;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
