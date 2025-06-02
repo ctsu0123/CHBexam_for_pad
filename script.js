@@ -292,33 +292,81 @@ if (fileBtn && fileInput) {
             // 讀取Excel檔案
             const reader = new FileReader();
             reader.onload = function (evt) {
-                const data = evt.target.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const ws = workbook.Sheets['Sheet1'];
-                if (!ws) {
-                    alert('找不到工作表 Sheet1');
-                    return;
+                try {
+                    const data = evt.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const ws = workbook.Sheets['Sheet1'];
+                    if (!ws) {
+                        throw new Error('找不到工作表 Sheet1');
+                    }
+                    
+                    // 確保工作表有資料
+                    if (!Object.keys(ws).length) {
+                        throw new Error('工作表中沒有資料');
+                    }
+                    
+                    const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                    
+                    // 驗證資料格式
+                    if (json.length < 2) {
+                        throw new Error('題庫檔案格式不正確，請確認檔案包含題號、答案、題目和選項欄位');
+                    }
+                    
+                    // 檢查標頭是否正確
+                    const headers = json[0];
+                    if (!headers || headers.length < 4 || 
+                        headers[0] !== '題號' || headers[1] !== '答案' || 
+                        headers[2] !== '題目' || headers[3] !== '選項') {
+                        throw new Error('檔案欄位格式不正確，請確認包含題號、答案、題目和選項欄位');
+                    }
+                    
+                    // 預期格式：[題號, 答案, 題目, 選項]
+                    questions = [];
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (row.length < 4) continue;
+                        
+                        // 檢查欄位資料是否完整
+                        if (!row[0] || !row[1] || !row[2] || !row[3]) {
+                            continue;
+                        }
+                        
+                        questions.push({
+                            id: row[0].toString().trim(),
+                            answer: row[1].toString().trim(),
+                            question: row[2].toString().trim(),
+                            options: row[3].toString().trim()
+                        });
+                    }
+                    
+                    if (questions.length === 0) {
+                        throw new Error('沒有找到有效的題目資料');
+                    }
+                    
+                    // 顯示成功訊息
+                    const successMsg = `題庫載入成功，共 ${questions.length} 題`;
+                    alert(successMsg);
+                    
+                    // 啟用開始按鈕
+                    startBtn.disabled = false;
+                    startBtn.style.backgroundColor = '';
+                    
+                } catch (error) {
+                    alert(`載入題庫失敗：${error.message}`);
+                    console.error('載入題庫失敗:', error);
                 }
-                const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
-                // 預期格式：[題號, 答案, 題目, 選項]
-                questions = [];
-                for (let i = 1; i < json.length; i++) {
-                    const row = json[i];
-                    if (row.length < 4) continue;
-                    questions.push({
-                        id: row[0].toString().trim(),
-                        answer: row[1].toString().trim(),
-                        question: row[2].toString().trim(),
-                        options: row[3].toString().trim()
-                    });
-                }
-                alert('題庫載入成功，共 ' + questions.length + ' 題');
             };
-            reader.readAsBinaryString(e.target.files[0]);
+            
+            // 使用更穩定的讀取方式
+            try {
+                reader.readAsBinaryString(e.target.files[0]);
+            } catch (error) {
+                alert('讀取檔案失敗，請確認檔案格式正確');
+                console.error('讀取檔案失敗:', error);
+            }
         }
     });
 }
-
 
 // 開始測驗
 startBtn.onclick = () => {
