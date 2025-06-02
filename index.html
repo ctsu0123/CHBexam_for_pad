@@ -1,95 +1,889 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>題庫測驗系統</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- xlsx.js 解析 Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPad 專用測驗系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+            color: #e0e0e0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 100vw;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: rgba(30, 30, 47, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 20px 20px 0;
+            padding: 30px;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-area {
+            flex: 1;
+            background: rgba(45, 45, 68, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #64b5f6, #42a5f5, #1e88e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(60, 60, 85, 0.8);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .section h3 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-button {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .file-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 136, 229, 0.4);
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mode-btn {
+            padding: 15px 20px;
+            border: 2px solid #1e88e5;
+            background: rgba(60, 60, 85, 0.8);
+            color: #64b5f6;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover, .mode-btn.active {
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(60, 60, 85, 0.9);
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: #9e9e9e;
+        }
+
+        .random-settings {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .random-settings.show {
+            display: block;
+        }
+
+        .question-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .question-number {
+            color: #64b5f6;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 24px;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            padding: 20px;
+            background: rgba(60, 60, 85, 0.8);
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            text-align: left;
+            color: #e0e0e0;
+        }
+
+        .option:hover {
+            border-color: #1e88e5;
+            background: rgba(30, 136, 229, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.2);
+        }
+
+        .option.correct {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            color: #81c784;
+        }
+
+        .answer-display {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #81c784;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 136, 229, 0.4);
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background: rgba(100, 100, 120, 0.5);
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 16px;
+            color: #b0b0b0;
+        }
+
+        .jump-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            background: rgba(60, 60, 85, 0.8);
+            color: #e0e0e0;
+        }
+
+        .jump-input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+
+        .no-questions {
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 20px;
+            margin-top: 50px;
+        }
+
+        .instructions {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .swipe-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .swipe-hint.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-radius: 0 0 20px 20px;
+                padding: 20px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .quiz-area {
+                padding: 30px;
+            }
+        }
+
+        .touch-feedback {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            right: 20px;
+            transform: translateY(-50%);
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .touch-feedback.show {
+            opacity: 1;
+        }
+
+        .touch-feedback .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+    </style>
 </head>
 <body>
-    <div id="container" class="ipad-container">
-        <div id="left-panel" class="ipad-panel">
-            <div id="upper-section" class="panel-section">
-                <div id="input-section" class="card">
-                    <h3>題庫管理</h3>
-                    <div class="file-selector">
-                        <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
-                        <label for="file-input" class="file-btn">選擇Excel檔案</label>
-                        <div id="file-name" class="file-name"></div>
-                        <div id="file-status" class="file-status"></div>
-                    </div>
-                    <div id="mode-select" class="mode-selector">
-                        <div class="mode-option">
-                            <input type="radio" name="mode" value="show-answer" id="mode-show">
-                            <label for="mode-show">逐題瀏覽(含答案)</label>
-                        </div>
-                        <div class="mode-option">
-                            <input type="radio" name="mode" value="hide-answer" id="mode-hide">
-                            <label for="mode-hide">逐題瀏覽(不含答案)</label>
-                        </div>
-                        <div class="mode-option">
-                            <input type="radio" name="mode" value="random" id="mode-random">
-                            <label for="mode-random">隨機出題</label>
-                        </div>
-                        <div id="random-count-section" class="random-count-section">
-                            <label>題數：<input type="number" id="random-count" min="1" value="100"></label>
-                        </div>
-                    </div>
-                    <div class="search-form">
-                        <div class="search-input-group">
-                            <input type="text" id="search-keyword" placeholder="輸入關鍵字查詢題庫" class="search-input">
-                        </div>
-                        <button id="search-btn" class="btn-primary">查詢</button>
-                    </div>
-                    <button id="start-btn" class="btn-primary">確認</button>
+    <div class="container">
+        <div class="sidebar">
+            <h1>📱 iPad 測驗系統</h1>
+            
+            <div class="instructions">
+                <strong>📋 使用說明：</strong><br>
+                1. 上傳 Excel 檔案（支援 .xlsx/.xls）<br>
+                2. 選擇測驗模式<br>
+                3. 使用觸控滑動或按鈕導航<br>
+                4. 支援關鍵字搜尋功能<br><br>
+                <strong>📄 Excel 格式要求：</strong><br>
+                A欄：題號 | B欄：答案 | C欄：題目<br>
+                D欄：選項(1)(2)(3)(4) - 四個選項用括號分隔
+            </div>
+
+            <div class="section">
+                <h3>📁 檔案上傳</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+                    <label for="fileInput" class="file-button">選擇 Excel 檔案</label>
                 </div>
+                <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                    支援格式：.xlsx, .xls
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🎯 測驗模式</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn" data-mode="browse-with-answer">📖 逐題瀏覽（含答案）</button>
+                    <button class="mode-btn" data-mode="browse-without-answer">📝 逐題瀏覽（不含答案）</button>
+                    <button class="mode-btn" data-mode="random">🎲 隨機出題</button>
+                </div>
+                <div class="random-settings" id="randomSettings">
+                    <label for="questionCount">題數設定：</label>
+                    <input type="number" id="questionCount" class="search-input" value="10" min="1" style="margin-top: 10px;">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🔍 關鍵字查詢</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="輸入關鍵字搜尋題目...">
+            </div>
+
+            <div class="section">
+                <h3>🔄 工具功能</h3>
+                <button class="file-button" onclick="downloadTemplate()" style="margin-bottom: 10px;">下載範例檔案</button>
+                <button class="file-button" onclick="showConvertTool()">Excel 轉換工具</button>
             </div>
         </div>
-        <div id="right-panel">
 
-            <div id="output-section">
-                <div id="instructions" class="instructions">
-                    <h4>歡迎使用本測驗系統</h4>
-                    <p>請在左側選擇Excel檔案並設定測驗模式後，點擊「確認」開始測驗。</p>
-                    <p><a href="convert/excel_converter.html" target="_blank" style="color: #00FFFF; text-decoration: none;">-- Excel題庫資料轉換</a></p>
-                    <p style="font-size: 14px; color: #e79e3e;">｛連結說明：可將原EXCEL三欄位(題號/內容/答案)，轉檔為四欄位(題號/答案/題目/選項)，再利用轉檔後檔案，轉入本系統｝</p>
-                    
-                    <h5>檔案格式要求：</h5>
-                    <ul>
-                        <li>請確保您的Excel檔案內資料，位於「Sheet1」工作表，且儲存格要求依序為：</li>
-                        <li>A1：題號</li>
-                        <li>B1：答案</li>
-                        <li>C1：題目</li>
-                        <li>D1：選項（格式範例：(1)選項1 (2)選項2 (3)選項3 (4)選項4）</li>
-                    </ul>
-                    <p style="margin: 10px 0; color: #00FFFF; text-decoration: none;">範例檔案：<a href="example/範例.xlsx" id="download-link" download="題庫範例.xlsx" onclick="return downloadFile(event)" style="color: #00FFFF; text-decoration: underline; cursor: pointer;">下載</a></p>
-                    
-                    <h5>測驗模式說明：</h5>
-                    <ul>
-                        <li>逐題瀏覽(含答案)：查看所有題目及答案</li>
-                        <li>逐題瀏覽(不含答案)：查看題目，自行作答</li>
-                        <li>隨機出題：從題庫中，依指定題數隨機選取題目進行測驗</li>
-                    </ul>
-
-                    <h5>功能鍵說明：</h5>
-                    <ul>
-                        <li>下一題按鈕／右鍵(→)：下一題</li>
-                        <li>上一題按鈕／左鍵(←)：上一題</li>
-                  </ul>                    
+        <div class="main-content">
+            <div class="quiz-area" id="quizArea">
+                <div class="no-questions">
+                    <h2>🚀 歡迎使用 iPad 測驗系統</h2>
+                    <p>請先上傳 Excel 檔案開始測驗</p>
                 </div>
-            </div>
-            <div id="nav-section">
-                <button id="prev-btn">上一題</button>
-                <input type="number" id="goto-input" min="1" style="width:50px;">
-                <button id="goto-btn">跳轉</button>
-                <button id="next-btn">下一題</button>
+
+                <div class="question-display" id="questionDisplay" style="display: none;">
+                    <div class="question-number" id="questionNumber"></div>
+                    <div class="question-text" id="questionText"></div>
+                    <div class="options" id="options"></div>
+                    <div class="answer-display" id="answerDisplay" style="display: none;"></div>
+                </div>
+
+                <div class="navigation" id="navigation" style="display: none;">
+                    <button class="nav-btn" id="prevBtn">⬅ 上一題</button>
+                    <div class="progress-info">
+                        <span id="progressText">1 / 1</span>
+                        <input type="number" id="jumpInput" class="jump-input" placeholder="跳轉" min="1">
+                        <button class="nav-btn" onclick="jumpToQuestion()">跳轉</button>
+                    </div>
+                    <button class="nav-btn" id="nextBtn">下一題 ➡</button>
+                </div>
+
+                <div class="touch-feedback" id="touchFeedback">
+                    <div class="progress"></div>
+                </div>
+
+                <div class="swipe-hint" id="swipeHint">
+                    👆 左右滑動切換題目，點擊選項查看答案
+                </div>
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
-</body>
-</html>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let currentMode = '';
+        let filteredQuestions = [];
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwipeInProgress = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            showSwipeHint();
+        });
+
+        function setupEventListeners() {
+            // 檔案上傳
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            
+            // 模式選擇
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectMode(this.dataset.mode);
+                });
+            });
+
+            // 搜尋功能
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            // 導航按鈕
+            document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigateQuestion(1));
+
+            // 鍵盤導航
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') navigateQuestion(-1);
+                if (e.key === 'ArrowRight') navigateQuestion(1);
+            });
+
+            // 觸控事件
+            const quizArea = document.getElementById('quizArea');
+            quizArea.addEventListener('touchstart', handleTouchStart, { passive: true });
+            quizArea.addEventListener('touchmove', handleTouchMove, { passive: false });
+            quizArea.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
+
+        function showSwipeHint() {
+            setTimeout(() => {
+                const hint = document.getElementById('swipeHint');
+                hint.classList.add('show');
+                setTimeout(() => {
+                    hint.classList.remove('show');
+                }, 3000);
+            }, 1000);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    parseQuestions(jsonData);
+                    showSuccessMessage(`成功載入 ${questions.length} 題`);
+                } catch (error) {
+                    showErrorMessage('檔案讀取失敗，請確認格式正確');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseQuestions(data) {
+            questions = [];
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (row[2]) { // 檢查題目欄位（C欄）
+                    // 解析選項字串
+                    const optionsText = row[3] || '';
+                    const options = parseOptions(optionsText);
+                    
+                    questions.push({
+                        number: row[0] || i, // 題號（A欄）
+                        answer: row[1] || '', // 答案（B欄）
+                        question: row[2], // 題目（C欄）
+                        optionA: options[0] || '',
+                        optionB: options[1] || '',
+                        optionC: options[2] || '',
+                        optionD: options[3] || '',
+                        originalAnswer: row[1] // 保留原始答案格式
+                    });
+                }
+            }
+            filteredQuestions = [...questions];
+            currentQuestionIndex = 0;
+            
+            if (currentMode) {
+                startQuiz();
+            }
+        }
+
+        function parseOptions(optionsText) {
+            if (!optionsText) return [];
+            
+            // 處理 (1)(2)(3)(4) 格式的選項
+            const options = [];
+            const matches = optionsText.match(/\((\d+)\)([^(]*?)(?=\(\d+\)|$)/g);
+            
+            if (matches) {
+                matches.forEach(match => {
+                    const content = match.replace(/^\(\d+\)/, '').trim();
+                    if (content) {
+                        options.push(content);
+                    }
+                });
+            } else {
+                // 如果不是標準格式，嘗試其他分隔符
+                const splitOptions = optionsText.split(/[①②③④]|[1234][\.\)、]|[ABCD][\.\)、]/);
+                options.push(...splitOptions.filter(opt => opt.trim()).map(opt => opt.trim()));
+            }
+            
+            return options;
+        }
+
+        function selectMode(mode) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            currentMode = mode;
+            
+            // 顯示/隱藏隨機出題設定
+            const randomSettings = document.getElementById('randomSettings');
+            if (mode === 'random') {
+                randomSettings.classList.add('show');
+            } else {
+                randomSettings.classList.remove('show');
+            }
+
+            if (questions.length > 0) {
+                startQuiz();
+            }
+        }
+
+        function startQuiz() {
+            if (!questions.length) {
+                showErrorMessage('請先上傳題目檔案');
+                return;
+            }
+
+            // 準備題目列表
+            if (currentMode === 'random') {
+                const count = parseInt(document.getElementById('questionCount').value) || 10;
+                const shuffled = [...filteredQuestions].sort(() => Math.random() - 0.5);
+                filteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+            }
+
+            currentQuestionIndex = 0;
+            displayQuestion();
+            showQuizInterface();
+        }
+
+        function displayQuestion() {
+            if (!filteredQuestions.length) {
+                document.getElementById('quizArea').innerHTML = '<div class="no-questions"><h2>🔍 沒有找到符合條件的題目</h2></div>';
+                return;
+            }
+
+            const question = filteredQuestions[currentQuestionIndex];
+            
+            // 更新題號
+            document.getElementById('questionNumber').textContent = 
+                `第 ${currentQuestionIndex + 1} 題 / 共 ${filteredQuestions.length} 題`;
+            
+            // 更新題目
+            document.getElementById('questionText').textContent = question.question;
+            
+            // 更新選項
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            const options = ['A', 'B', 'C', 'D'];
+            options.forEach(opt => {
+                const optionText = question[`option${opt}`];
+                if (optionText) {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.textContent = `${opt}. ${optionText}`;
+                    optionDiv.addEventListener('click', () => showAnswer(opt));
+                    
+                    // 將數字答案轉換為字母進行比較
+                    let correctAnswer = question.originalAnswer;
+                    if (/^[1-4]$/.test(correctAnswer)) {
+                        correctAnswer = String.fromCharCode(64 + parseInt(correctAnswer));
+                    }
+                    
+                    // 如果是含答案模式，直接標示正確答案
+                    if (currentMode === 'browse-with-answer' && opt === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    
+                    optionsContainer.appendChild(optionDiv);
+                }
+            });
+
+            // 顯示答案（含答案模式）
+            const answerDisplay = document.getElementById('answerDisplay');
+            if (currentMode === 'browse-with-answer') {
+                let displayAnswer = question.originalAnswer;
+                if (/^[1-4]$/.test(displayAnswer)) {
+                    displayAnswer = `選項${String.fromCharCode(64 + parseInt(displayAnswer))}`;
+                }
+                answerDisplay.style.display = 'block';
+                answerDisplay.textContent = `正確答案：${displayAnswer}`;
+            } else {
+                answerDisplay.style.display = 'none';
+            }
+
+            // 更新導航
+            updateNavigation();
+        }
+
+        function showAnswer(selectedOption) {
+            if (currentMode === 'browse-with-answer') return;
+            
+            const question = filteredQuestions[currentQuestionIndex];
+            const answerDisplay = document.getElementById('answerDisplay');
+            
+            // 將數字答案轉換為字母（1->A, 2->B, 3->C, 4->D）
+            let correctAnswer = question.originalAnswer;
+            if (/^[1-4]$/.test(correctAnswer)) {
+                correctAnswer = String.fromCharCode(64 + parseInt(correctAnswer)); // 1->A, 2->B, etc.
+            }
+            
+            if (selectedOption === correctAnswer) {
+                answerDisplay.innerHTML = `✅ 正確！答案是：選項${correctAnswer}`;
+                answerDisplay.style.background = 'rgba(76, 175, 80, 0.2)';
+                answerDisplay.style.borderColor = '#4CAF50';
+                answerDisplay.style.color = '#81c784';
+            } else {
+                answerDisplay.innerHTML = `❌ 錯誤！正確答案是：選項${correctAnswer}`;
+                answerDisplay.style.background = 'rgba(244, 67, 54, 0.2)';
+                answerDisplay.style.borderColor = '#f44336';
+                answerDisplay.style.color = '#ef5350';
+            }
+            
+            answerDisplay.style.display = 'block';
+            
+            // 標示正確答案
+            document.querySelectorAll('.option').forEach(opt => {
+                const optText = opt.textContent.charAt(0);
+                if (optText === correctAnswer) {
+                    opt.classList.add('correct');
+                }
+            });
+        }
+
+        function navigateQuestion(direction) {
+            const newIndex = currentQuestionIndex + direction;
+            if (newIndex >= 0 && newIndex < filteredQuestions.length) {
+                currentQuestionIndex = newIndex;
+                displayQuestion();
+            }
+        }
+
+        function jumpToQuestion() {
+            const jumpInput = document.getElementById('jumpInput');
+            const targetIndex = parseInt(jumpInput.value) - 1;
+            
+            if (targetIndex >= 0 && targetIndex < filteredQuestions.length) {
+                currentQuestionIndex = targetIndex;
+                displayQuestion();
+                jumpInput.value = '';
+            } else {
+                showErrorMessage('請輸入有效的題號');
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').disabled = currentQuestionIndex === filteredQuestions.length - 1;
+            document.getElementById('progressText').textContent = 
+                `${currentQuestionIndex + 1} / ${filteredQuestions.length}`;
+            document.getElementById('jumpInput').max = filteredQuestions.length;
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredQuestions = [...questions];
+            } else {
+                filteredQuestions = questions.filter(q => 
+                    q.question.toLowerCase().includes(searchTerm) ||
+                    q.optionA.toLowerCase().includes(searchTerm) ||
+                    q.optionB.toLowerCase().includes(searchTerm) ||
+                    q.optionC.toLowerCase().includes(searchTerm) ||
+                    q.optionD.toLowerCase().includes(searchTerm) ||
+                    q.number.toString().includes(searchTerm)
+                );
+            }
+            
+            currentQuestionIndex = 0;
+            if (currentMode && filteredQuestions.length > 0) {
+                displayQuestion();
+                showQuizInterface();
+            }
+        }
+
+        function showQuizInterface() {
+            document.querySelector('.no-questions').style.display = 'none';
+            document.getElementById('questionDisplay').style.display = 'flex';
+            document.getElementById('navigation').style.display = 'flex';
+        }
+
+        // 觸控事件處理
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            isSwipeInProgress = false;
+        }
+
+        function handleTouchMove(e) {
+            if (!touchStartX) return;
+            
+            touchEndX = e.touches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > 20) {
+                isSwipeInProgress = true;
+                e.preventDefault();
+                
+                // 顯示滑動進度
+                const feedback = document.getElementById('touchFeedback');
+                const progress = feedback.querySelector('.progress');
+                feedback.classList.add('show');
+                
+                const maxWidth = 100;
+                const currentProgress = Math.min(Math.abs(diff) / 100 * maxWidth, maxWidth);
+                progress.style.width = currentProgress + '%';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchStartX || !isSwipeInProgress) return;
+            
+            const diff = touchStartX - touchEndX;
+            const minSwipeDistance = 50;
+            
+            // 隱藏滑動進度
+            const feedback = document.getElementById('touchFeedback');
+            feedback.classList.remove('show');
+            
+            if (Math.abs(diff) > minSwipeDistance) {
+                if (diff > 0) {
+                    navigateQuestion(1); // 向右滑動，下一題
+                } else {
+                    navigateQuestion(-1); // 向左滑動，上一題
+                }
+            }
+            
+            touchStartX = 0;
+            touchEndX = 0;
+            isSwipeInProgress = false;
+        }
+
+        function downloadTemplate() {
+            const templateData = [
+                ['題號', '答案', '題目', '選項'],
+                ['1', '2', '以下何者是台灣的首都？', '(1)台北(2)台中(3)台南(4)高雄'],
+                ['2', '2', '1+1等於多少？', '(1)1(2)2(3)3(4)4'],
+                ['3', '4', '以下何者是程式語言？', '(1)HTML(2)CSS(3)JavaScript(4)以上皆是'],
+                ['4', 'A', '台灣最高的山是？', '(1)玉山(2)雪山(3)合歡山(4)阿里山'],
+                ['5', '1', '海水的主要成分是？', '(1)氯化鈉(2)碳酸鈣(3)硫酸鎂(4)氯化鉀']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '測驗題目');
+            XLSX.writeFile(wb, '測驗題目範例.xlsx');
+        }
+
+        function showConvertTool() {
+            alert('Excel 轉換工具功能開發中，敬請期待！\n\n目前支援的格式：\n- A欄：題號\n- B欄：答案（支援數字1-4或字母A-D）\n- C欄：題目\n- D欄：選項，格式：(1)選項一(2)選項二(3)選項三(4)選項四');
+        }
+
+        function showSuccessMessage(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 1000;
+                background: #4CAF50; color: white; padding: 15px 25px;
+                border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                font-size: 16px; font-weight: 500;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 1000;
+                background: #f44336; color: white; padding: 15px 25px;
+                border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                font-size: 16px; font-weight: 500;
+            

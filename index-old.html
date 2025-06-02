@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>題庫測驗系統</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- xlsx.js 解析 Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div id="container" class="ipad-container">
+        <div id="left-panel" class="ipad-panel">
+            <div id="upper-section" class="panel-section">
+                <div id="input-section" class="card">
+                    <h3>題庫管理</h3>
+                    <div class="file-selector">
+                        <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
+                        <label for="file-input" class="file-btn">選擇Excel檔案</label>
+                        <div id="file-name" class="file-name"></div>
+                        <div id="file-status" class="file-status"></div>
+                    </div>
+                    <div id="mode-select" class="mode-selector">
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="show-answer" id="mode-show">
+                            <label for="mode-show">逐題瀏覽(含答案)</label>
+                        </div>
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="hide-answer" id="mode-hide">
+                            <label for="mode-hide">逐題瀏覽(不含答案)</label>
+                        </div>
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="random" id="mode-random">
+                            <label for="mode-random">隨機出題</label>
+                        </div>
+                        <div id="random-count-section" class="random-count-section">
+                            <label>題數：<input type="number" id="random-count" min="1" value="100"></label>
+                        </div>
+                    </div>
+                    <div class="search-form">
+                        <div class="search-input-group">
+                            <input type="text" id="search-keyword" placeholder="輸入關鍵字查詢題庫" class="search-input">
+                        </div>
+                        <button id="search-btn" class="btn-primary">查詢</button>
+                    </div>
+                    <button id="start-btn" class="btn-primary">確認</button>
+                </div>
+            </div>
+        </div>
+        <div id="right-panel">
+
+            <div id="output-section">
+                <div id="instructions" class="instructions">
+                    <h4>歡迎使用本測驗系統</h4>
+                    <p>請在左側選擇Excel檔案並設定測驗模式後，點擊「確認」開始測驗。</p>
+                    <p><a href="convert/excel_converter.html" target="_blank" style="color: #00FFFF; text-decoration: none;">-- Excel題庫資料轉換</a></p>
+                    <p style="font-size: 14px; color: #e79e3e;">｛連結說明：可將原EXCEL三欄位(題號/內容/答案)，轉檔為四欄位(題號/答案/題目/選項)，再利用轉檔後檔案，轉入本系統｝</p>
+                    
+                    <h5>檔案格式要求：</h5>
+                    <ul>
+                        <li>請確保您的Excel檔案內資料，位於「Sheet1」工作表，且儲存格要求依序為：</li>
+                        <li>A1：題號</li>
+                        <li>B1：答案</li>
+                        <li>C1：題目</li>
+                        <li>D1：選項（格式範例：(1)選項1 (2)選項2 (3)選項3 (4)選項4）</li>
+                    </ul>
+                    <p style="margin: 10px 0; color: #00FFFF; text-decoration: none;">範例檔案：<a href="example/範例.xlsx" id="download-link" download="題庫範例.xlsx" onclick="return downloadFile(event)" style="color: #00FFFF; text-decoration: underline; cursor: pointer;">下載</a></p>
+                    
+                    <h5>測驗模式說明：</h5>
+                    <ul>
+                        <li>逐題瀏覽(含答案)：查看所有題目及答案</li>
+                        <li>逐題瀏覽(不含答案)：查看題目，自行作答</li>
+                        <li>隨機出題：從題庫中，依指定題數隨機選取題目進行測驗</li>
+                    </ul>
+
+                    <h5>功能鍵說明：</h5>
+                    <ul>
+                        <li>下一題按鈕／右鍵(→)：下一題</li>
+                        <li>上一題按鈕／左鍵(←)：上一題</li>
+                  </ul>                    
+                </div>
+            </div>
+            <div id="nav-section">
+                <button id="prev-btn">上一題</button>
+                <input type="number" id="goto-input" min="1" style="width:50px;">
+                <button id="goto-btn">跳轉</button>
+                <button id="next-btn">下一題</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
