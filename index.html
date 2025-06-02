@@ -14,22 +14,31 @@
     <div id="container" class="ipad-container">
         <div id="left-panel" class="ipad-panel">
             <div id="upper-section" class="panel-section">
-                <div id="input-section">
+                <div id="input-section" class="card">
                     <h3>戴入題庫</h3>
                     <div class="file-selector">
                         <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none;">
                         <button id="file-btn" type="button" class="file-btn">選擇Excel檔案</button>
                         <div id="file-name" class="file-name"></div>
                     </div>
-                    <div id="mode-select">
-                        <label><input type="radio" name="mode" value="show-answer"> 逐題瀏覽(含答案)</label>
-                        <label><input type="radio" name="mode" value="hide-answer"> 逐題瀏覽(不含答案)</label>
-                        <label><input type="radio" name="mode" value="random"> 隨機出題</label>
-                        <div id="random-count-section" style="display:none;">
+                    <div id="mode-select" class="mode-selector">
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="show-answer" id="mode-show">
+                            <label for="mode-show">逐題瀏覽(含答案)</label>
+                        </div>
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="hide-answer" id="mode-hide">
+                            <label for="mode-hide">逐題瀏覽(不含答案)</label>
+                        </div>
+                        <div class="mode-option">
+                            <input type="radio" name="mode" value="random" id="mode-random">
+                            <label for="mode-random">隨機出題</label>
+                        </div>
+                        <div id="random-count-section" class="random-count-section">
                             <label>題數：<input type="number" id="random-count" min="1" value="100"></label>
                         </div>
                     </div>
-                    <button id="start-btn">確認</button>
+                    <button id="start-btn" class="primary-btn">確認</button>
                 </div>
             </div>
             <div id="lower-section" class="panel-section">
@@ -39,7 +48,7 @@
                         <div class="search-input-group">
                             <input type="text" id="search-keyword" placeholder="輸入關鍵字" class="search-input">
                         </div>
-                        <button id="search-btn" class="search-button" style="width: 70px; height: 30px; font-size: 16px; font-family: 'Microsoft JhengHei', sans-serif;">查詢</button>
+                        <button id="search-btn" class="primary-btn">查詢</button>
                     </div>
                 </div>
             </div>
