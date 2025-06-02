@@ -126,9 +126,15 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            margin-bottom: 15px;
         }
 
-        .mode-btn {
+        .mode-radio {
+            display: none;
+        }
+
+        .mode-label {
+            display: block;
             padding: 15px 20px;
             border: 2px solid #1e88e5;
             background: rgba(60, 60, 85, 0.8);
@@ -138,13 +144,19 @@
             font-size: 16px;
             font-weight: 500;
             transition: all 0.3s ease;
+            text-align: center;
         }
 
-        .mode-btn:hover, .mode-btn.active {
+        .mode-radio:checked + .mode-label {
             background: linear-gradient(135deg, #1e88e5, #1976d2);
             color: white;
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .mode-radio:not(:checked) + .mode-label:hover {
+            background: rgba(100, 181, 246, 0.2);
+            border-color: #64b5f6;
         }
 
         .search-input {
@@ -418,14 +430,26 @@
             <div class="section">
                 <h3>🎯 測驗模式</h3>
                 <div class="mode-buttons">
-                    <button class="mode-btn" data-mode="browse-with-answer">📖 逐題瀏覽（含答案）</button>
-                    <button class="mode-btn" data-mode="browse-without-answer">📝 逐題瀏覽（不含答案）</button>
-                    <button class="mode-btn" data-mode="random">🎲 隨機出題</button>
+                    <div>
+                        <input type="radio" id="mode-browse-with-answer" name="quizMode" value="browse-with-answer" class="mode-radio">
+                        <label for="mode-browse-with-answer" class="mode-label">📖 逐題瀏覽（含答案）</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="mode-browse-without-answer" name="quizMode" value="browse-without-answer" class="mode-radio">
+                        <label for="mode-browse-without-answer" class="mode-label">📝 逐題瀏覽（不含答案）</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="mode-random" name="quizMode" value="random" class="mode-radio">
+                        <label for="mode-random" class="mode-label">🎲 隨機出題</label>
+                    </div>
                 </div>
-                <div class="random-settings" id="randomSettings">
+                <div class="random-settings" id="randomSettings" style="display: none;">
                     <label for="questionCount">題數設定：</label>
                     <input type="number" id="questionCount" class="search-input" value="10" min="1" style="margin-top: 10px;">
                 </div>
+                <button id="startQuizBtn" class="file-button" style="margin-top: 15px; width: 100%;" disabled>
+                    🚀 開始測驗
+                </button>
             </div>
 
             <div class="section">
@@ -685,26 +709,55 @@
             return options;
         }
 
-        function selectMode(mode) {
-            // 更新按鈕狀態
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            currentMode = mode;
+        function setupEventListeners() {
+            // 檔案上傳
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
             
-            // 顯示/隱藏隨機出題設定
-            const randomSettings = document.getElementById('randomSettings');
-            if (mode === 'random') {
-                randomSettings.classList.add('show');
-            } else {
-                randomSettings.classList.remove('show');
-            }
-
-            if (questions.length > 0) {
+            // 模式選擇
+            document.querySelectorAll('input[name="quizMode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    currentMode = this.value;
+                    const randomSettings = document.getElementById('randomSettings');
+                    randomSettings.style.display = this.value === 'random' ? 'block' : 'none';
+                    
+                    // 啟用開始測驗按鈕
+                    document.getElementById('startQuizBtn').disabled = false;
+                });
+            });
+            
+            // 開始測驗按鈕
+            document.getElementById('startQuizBtn').addEventListener('click', function() {
+                if (!currentMode) {
+                    showErrorMessage('請選擇測驗模式');
+                    return;
+                }
+                
+                if (questions.length === 0) {
+                    showErrorMessage('請先上傳題目檔案');
+                    return;
+                }
+                
                 startQuiz();
-            }
+            });
+
+            // 搜尋功能
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            // 導航按鈕
+            document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigateQuestion(1));
+
+            // 鍵盤導航
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') navigateQuestion(-1);
+                if (e.key === 'ArrowRight') navigateQuestion(1);
+            });
+
+            // 觸控事件
+            const quizArea = document.getElementById('quizArea');
+            quizArea.addEventListener('touchstart', handleTouchStart, { passive: true });
+            quizArea.addEventListener('touchmove', handleTouchMove, { passive: false });
+            quizArea.addEventListener('touchend', handleTouchEnd, { passive: true });
         }
 
         function startQuiz() {
