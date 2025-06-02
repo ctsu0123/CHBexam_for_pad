@@ -15,7 +15,7 @@
         <div id="left-panel" class="ipad-panel">
             <div id="upper-section" class="panel-section">
                 <div id="input-section" class="card">
-                    <h3>戴入題庫</h3>
+                    <h3>題庫管理</h3>
                     <div class="file-selector">
                         <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
                         <label for="file-input" class="file-btn">選擇Excel檔案</label>
@@ -39,18 +39,13 @@
                             <label>題數：<input type="number" id="random-count" min="1" value="100"></label>
                         </div>
                     </div>
-                    <button id="start-btn" class="primary-btn">確認</button>
-                </div>
-            </div>
-            <div id="lower-section" class="panel-section">
-                <div id="search-section" class="search-container">
-                    <h3>題庫關鍵字查詢</h3>
                     <div class="search-form">
                         <div class="search-input-group">
-                            <input type="text" id="search-keyword" placeholder="輸入關鍵字" class="search-input">
+                            <input type="text" id="search-keyword" placeholder="輸入關鍵字查詢題庫" class="search-input">
                         </div>
-                        <button id="search-btn" class="primary-btn">查詢</button>
+                        <button id="search-btn" class="btn-primary">查詢</button>
                     </div>
+                    <button id="start-btn" class="btn-primary">確認</button>
                 </div>
             </div>
         </div>
