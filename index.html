@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iPad 專用測驗系統</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script type="module" src="db.js"></script>
     <style>
         * {
             margin: 0;
@@ -484,21 +485,22 @@
         let touchEndX = 0;
         let isSwipeInProgress = false;
         
-        // 檢查並載入暫存的題目
-        function loadQuestionsFromStorage() {
-            const savedQuestions = localStorage.getItem('quizQuestions');
-            if (savedQuestions) {
-                try {
-                    questions = JSON.parse(savedQuestions);
+        // 從 IndexedDB 載入題目
+        async function loadQuestionsFromDB() {
+            try {
+                const { loadQuestionsFromDB } = await import('./db.js');
+                const loadedQuestions = await loadQuestionsFromDB();
+                if (loadedQuestions && loadedQuestions.length > 0) {
+                    questions = loadedQuestions;
                     filteredQuestions = [...questions];
                     updateQuestionCount();
                     return true;
-                } catch (e) {
-                    console.error('載入題目失敗:', e);
-                    localStorage.removeItem('quizQuestions');
                 }
+                return false;
+            } catch (error) {
+                console.error('從資料庫載入題目失敗:', error);
+                return false;
             }
-            return false;
         }
         
         // 更新題數顯示
@@ -510,25 +512,44 @@
             }
         }
         
-        // 清除暫存資料
-        function clearStorage() {
-            localStorage.removeItem('quizQuestions');
-            const countElement = document.getElementById('questionCountDisplay');
-            if (countElement) {
-                countElement.style.display = 'none';
+        // 儲存題目到 IndexedDB
+        async function saveQuestionsToDB(questionsToSave) {
+            try {
+                const { saveQuestionsToDB } = await import('./db.js');
+                const count = await saveQuestionsToDB(questionsToSave);
+                return count;
+            } catch (error) {
+                console.error('儲存題目到資料庫失敗:', error);
+                throw error;
             }
         }
         
-        // 頁面卸載時清除暫存
-        window.addEventListener('beforeunload', clearStorage);
+        // 清除資料庫
+        async function clearDB() {
+            try {
+                const { clearDB } = await import('./db.js');
+                await clearDB();
+                const countElement = document.getElementById('questionCountDisplay');
+                if (countElement) {
+                    countElement.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('清除資料庫失敗:', error);
+            }
+        }
 
         // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             setupEventListeners();
             showSwipeHint();
-            // 嘗試載入暫存的題目
-            if (loadQuestionsFromStorage()) {
-                showSuccessMessage('已載入暫存的題目');
+            // 嘗試從 IndexedDB 載入題目
+            try {
+                const hasQuestions = await loadQuestionsFromDB();
+                if (hasQuestions) {
+                    showSuccessMessage(`已載入 ${questions.length} 題`);
+                }
+            } catch (error) {
+                console.error('初始化載入題目失敗:', error);
             }
         });
 
@@ -573,28 +594,43 @@
             }, 1000);
         }
 
-        function handleFileUpload(event) {
+        async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            
+            reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                     
+                    // 解析題目
                     parseQuestions(jsonData);
-                    // 儲存到 localStorage
-                    localStorage.setItem('quizQuestions', JSON.stringify(questions));
+                    
+                    // 儲存到 IndexedDB
+                    await saveQuestionsToDB(questions);
+                    
                     showSuccessMessage(`成功載入 ${questions.length} 題`);
                     updateQuestionCount();
                 } catch (error) {
+                    console.error('處理檔案上傳錯誤:', error);
                     showErrorMessage('檔案讀取失敗，請確認格式正確');
                 }
             };
-            reader.readAsArrayBuffer(file);
+            
+            reader.onerror = function() {
+                showErrorMessage('檔案讀取失敗');
+            };
+            
+            try {
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error('讀取檔案錯誤:', error);
+                showErrorMessage('無法讀取檔案');
+            }
         }
 
         function parseQuestions(data) {
