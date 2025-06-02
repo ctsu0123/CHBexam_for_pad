@@ -406,7 +406,10 @@
                     <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
                     <label for="fileInput" class="file-button">選擇 Excel 檔案</label>
                 </div>
-                <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                <div id="questionCountDisplay" style="margin-top: 10px; font-size: 14px; color: #4CAF50; display: none;">
+                    已載入 0 題
+                </div>
+                <div style="margin-top: 5px; font-size: 12px; color: #888;">
                     支援格式：.xlsx, .xls
                 </div>
             </div>
@@ -472,6 +475,7 @@
     </div>
 
     <script>
+        // 初始化變數
         let questions = [];
         let currentQuestionIndex = 0;
         let currentMode = '';
@@ -479,11 +483,53 @@
         let touchStartX = 0;
         let touchEndX = 0;
         let isSwipeInProgress = false;
+        
+        // 檢查並載入暫存的題目
+        function loadQuestionsFromStorage() {
+            const savedQuestions = localStorage.getItem('quizQuestions');
+            if (savedQuestions) {
+                try {
+                    questions = JSON.parse(savedQuestions);
+                    filteredQuestions = [...questions];
+                    updateQuestionCount();
+                    return true;
+                } catch (e) {
+                    console.error('載入題目失敗:', e);
+                    localStorage.removeItem('quizQuestions');
+                }
+            }
+            return false;
+        }
+        
+        // 更新題數顯示
+        function updateQuestionCount() {
+            const countElement = document.getElementById('questionCountDisplay');
+            if (countElement) {
+                countElement.textContent = `已載入 ${questions.length} 題`;
+                countElement.style.display = 'block';
+            }
+        }
+        
+        // 清除暫存資料
+        function clearStorage() {
+            localStorage.removeItem('quizQuestions');
+            const countElement = document.getElementById('questionCountDisplay');
+            if (countElement) {
+                countElement.style.display = 'none';
+            }
+        }
+        
+        // 頁面卸載時清除暫存
+        window.addEventListener('beforeunload', clearStorage);
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             showSwipeHint();
+            // 嘗試載入暫存的題目
+            if (loadQuestionsFromStorage()) {
+                showSuccessMessage('已載入暫存的題目');
+            }
         });
 
         function setupEventListeners() {
@@ -540,7 +586,10 @@
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                     
                     parseQuestions(jsonData);
+                    // 儲存到 localStorage
+                    localStorage.setItem('quizQuestions', JSON.stringify(questions));
                     showSuccessMessage(`成功載入 ${questions.length} 題`);
+                    updateQuestionCount();
                 } catch (error) {
                     showErrorMessage('檔案讀取失敗，請確認格式正確');
                 }
@@ -870,13 +919,29 @@
                 background: #4CAF50; color: white; padding: 15px 25px;
                 border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
                 font-size: 16px; font-weight: 500;
+                animation: slideIn 0.3s ease-out;
             `;
             toast.textContent = message;
             document.body.appendChild(toast);
             
             setTimeout(() => {
-                toast.remove();
+                toast.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
+            
+            // 添加動畫樣式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         function showErrorMessage(message) {
