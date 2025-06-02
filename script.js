@@ -11,34 +11,75 @@ function handleTouchEnd(event) {
     
     touchEndX = event.changedTouches[0].screenX;
     handleSwipe();
-    touchStartX = 0; // 重置觸控起始位置
+    touchStartX = 0;
 }
 
 function handleSwipe() {
-    const swipeThreshold = 50; // 最小滑動距離
+    const swipeThreshold = 100; // 增加滑動距離門檻
     
     if (touchEndX < touchStartX - swipeThreshold) {
         // 向左滑動，下一題
-        if (nextBtn && !nextBtn.disabled) nextBtn.click();
+        if (nextBtn && !nextBtn.disabled) {
+            nextBtn.click();
+            // 播放滑動動畫
+            playSwipeAnimation('next');
+        }
     }
     
     if (touchEndX > touchStartX + swipeThreshold) {
         // 向右滑動，上一題
-        if (prevBtn && !prevBtn.disabled) prevBtn.click();
+        if (prevBtn && !prevBtn.disabled) {
+            prevBtn.click();
+            // 播放滑動動畫
+            playSwipeAnimation('prev');
+        }
     }
 }
 
 // 初始化觸控事件
 function initTouchEvents() {
-    if ('ontouchstart' in window) {
-        document.addEventListener('touchstart', handleTouchStart, { passive: true });
-        document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+}
+
+// 播放滑動動畫
+function playSwipeAnimation(direction) {
+    const animation = direction === 'next' ? 'slide-left' : 'slide-right';
+    const outputSection = document.getElementById('output-section');
+    
+    if (outputSection) {
+        outputSection.style.animation = `${animation} 0.3s ease-out`;
+        setTimeout(() => {
+            outputSection.style.animation = '';
+        }, 300);
     }
 }
 
-// iPad 版本不需要行動選單相關邏輯
+// 初始化行動選單
 function initMobileMenu() {
-    // 空函數，iPad 版本不需要行動選單
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const leftPanel = document.getElementById('left-panel');
+    
+    if (mobileMenuBtn && leftPanel) {
+        mobileMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            leftPanel.classList.toggle('visible');
+        });
+        
+        // 點擊外部關閉選單
+        document.addEventListener('click', function(event) {
+            if (leftPanel.classList.contains('visible') && 
+                !leftPanel.contains(event.target) && 
+                event.target !== mobileMenuBtn) {
+                leftPanel.classList.remove('visible');
+            }
+        });
+        
+        // 防止點擊選單內部時觸發外部點擊事件
+        leftPanel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 }
 
 // 檢測 iOS 裝置
