@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel題庫資料轉換</title>
+    <link rel="stylesheet" href="excel_converter_style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 上方輸入區 -->
+        <div class="input-area">
+            <h2>Excel題庫資料轉換</h2>
+            <input type="file" id="excelFile" accept=".xlsx, .xls">
+            <button onclick="convertExcel()">執行轉換</button>
+            <button onclick="downloadExcel()">下載結果</button>
+        </div>
+
+        <!-- 下方顯示區 -->
+        <div class="output-area">
+            <!-- 左側原始資料 -->
+            <div class="output-section">
+                <h3>原始資料</h3>
+                <div id="originalTable" class="table-container"></div>
+            </div>
+
+            <!-- 右側轉換後資料 -->
+            <div class="output-section">
+                <h3>轉換後資料</h3>
+                <div id="convertedTable" class="table-container"></div>
+            </div>
+        </div>
+    </div>
+    <script src="excel_converter_script.js"></script>
+</body>
+</html>

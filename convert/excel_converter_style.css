@@ -1,0 +1,58 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.input-area {
+    flex: 1;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.output-area {
+    flex: 7;
+    display: flex;
+}
+
+.output-section {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.table-container {
+    margin-top: 10px;
+    border: 1px solid #ddd;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
