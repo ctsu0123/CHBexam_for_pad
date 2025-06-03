@@ -69,6 +69,7 @@
             text-align: center;
             background: linear-gradient(135deg, #64b5f6, #42a5f5, #1e88e5);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -372,6 +373,127 @@
             }
         }
 
+        /* 轉換工具對話框樣式 */
+        .convert-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .convert-dialog-content {
+            background: #2d2d44;
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .convert-dialog h3 {
+            margin-top: 0;
+            color: #64b5f6;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .convert-dialog p {
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .convert-dialog textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            background: #1e1e2d;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .dialog-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .dialog-buttons button:first-child {
+            background: #42a5f5;
+            color: white;
+        }
+        
+        .dialog-buttons button:last-child {
+            background: #555;
+            color: white;
+        }
+        
+        .dialog-buttons button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .conversion-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .success-message {
+            color: #4caf50;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            color: #f44336;
+            font-weight: 600;
+        }
+        
+        #useQuestionsBtn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+        
+        #useQuestionsBtn:hover {
+            background: #43a047;
+            transform: translateY(-1px);
+        }
+        
         .touch-feedback {
             position: absolute;
             top: 50%;
@@ -582,10 +704,30 @@
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
             
             // 模式選擇
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    selectMode(this.dataset.mode);
+            document.querySelectorAll('input[name="quizMode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    currentMode = this.value;
+                    const randomSettings = document.getElementById('randomSettings');
+                    randomSettings.style.display = this.value === 'random' ? 'block' : 'none';
+                    
+                    // 啟用開始測驗按鈕
+                    document.getElementById('startQuizBtn').disabled = false;
                 });
+            });
+            
+            // 開始測驗按鈕
+            document.getElementById('startQuizBtn').addEventListener('click', function() {
+                if (!currentMode) {
+                    showErrorMessage('請選擇測驗模式');
+                    return;
+                }
+                
+                if (questions.length === 0) {
+                    showErrorMessage('請先上傳題目檔案');
+                    return;
+                }
+                
+                startQuiz();
             });
 
             // 搜尋功能
@@ -707,57 +849,6 @@
             }
             
             return options;
-        }
-
-        function setupEventListeners() {
-            // 檔案上傳
-            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-            
-            // 模式選擇
-            document.querySelectorAll('input[name="quizMode"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    currentMode = this.value;
-                    const randomSettings = document.getElementById('randomSettings');
-                    randomSettings.style.display = this.value === 'random' ? 'block' : 'none';
-                    
-                    // 啟用開始測驗按鈕
-                    document.getElementById('startQuizBtn').disabled = false;
-                });
-            });
-            
-            // 開始測驗按鈕
-            document.getElementById('startQuizBtn').addEventListener('click', function() {
-                if (!currentMode) {
-                    showErrorMessage('請選擇測驗模式');
-                    return;
-                }
-                
-                if (questions.length === 0) {
-                    showErrorMessage('請先上傳題目檔案');
-                    return;
-                }
-                
-                startQuiz();
-            });
-
-            // 搜尋功能
-            document.getElementById('searchInput').addEventListener('input', handleSearch);
-
-            // 導航按鈕
-            document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
-            document.getElementById('nextBtn').addEventListener('click', () => navigateQuestion(1));
-
-            // 鍵盤導航
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'ArrowLeft') navigateQuestion(-1);
-                if (e.key === 'ArrowRight') navigateQuestion(1);
-            });
-
-            // 觸控事件
-            const quizArea = document.getElementById('quizArea');
-            quizArea.addEventListener('touchstart', handleTouchStart, { passive: true });
-            quizArea.addEventListener('touchmove', handleTouchMove, { passive: false });
-            quizArea.addEventListener('touchend', handleTouchEnd, { passive: true });
         }
 
         function startQuiz() {
@@ -998,46 +1089,174 @@
         }
 
         function showConvertTool() {
-            alert('Excel 轉換工具功能開發中，敬請期待！\n\n目前支援的格式：\n- A欄：題號\n- B欄：答案（支援數字1-4或字母A-D）\n- C欄：題目\n- D欄：選項，格式：(1)選項一(2)選項二(3)選項三(4)選項四');
+            // 建立對話框
+            const dialog = document.createElement('div');
+            dialog.className = 'convert-dialog';
+            dialog.innerHTML = `
+                <div class="convert-dialog-content">
+                    <h3>Excel 轉換工具</h3>
+                    <p>請貼上 Excel 內容（複製整張工作表即可）</p>
+                    <textarea id="excelContent" rows="15" placeholder="請貼上 Excel 內容..."></textarea>
+                    <div class="dialog-buttons">
+                        <button id="convertBtn">轉換</button>
+                        <button id="cancelBtn">取消</button>
+                    </div>
+                    <div id="conversionResult" class="conversion-result"></div>
+                </div>
+            `;
+            
+            // 添加到頁面
+            document.body.appendChild(dialog);
+            
+            // 轉換按鈕點擊事件
+            dialog.querySelector('#convertBtn').addEventListener('click', convertExcel);
+            
+            // 取消按鈕點擊事件
+            dialog.querySelector('#cancelBtn').addEventListener('click', () => {
+                document.body.removeChild(dialog);
+            });
+            
+            // 點擊對話框外部關閉
+            dialog.addEventListener('click', (e) => {
+                if (e.target === dialog) {
+                    document.body.removeChild(dialog);
+                }
+            });
+            
+            function convertExcel() {
+                const excelContent = document.getElementById('excelContent').value.trim();
+                if (!excelContent) {
+                    showErrorMessage('請貼上 Excel 內容');
+                    return;
+                }
+                
+                try {
+                    // 解析 Excel 內容
+                    const lines = excelContent.split('\n').filter(line => line.trim() !== '');
+                    const questions = [];
+                    
+                    for (const line of lines) {
+                        // 分割每一行的欄位（假設是 tab 分隔）
+                        const cells = line.split('\t');
+                        if (cells.length < 4) continue;
+                        
+                        const questionNumber = cells[0].trim();
+                        const answer = cells[1].trim().toUpperCase();
+                        const questionText = cells[2].trim();
+                        const optionsText = cells[3].trim();
+                        
+                        // 解析選項
+                        const options = [];
+                        const optionRegex = /\((\d+)\)([^(]+)/g;
+                        let match;
+                        
+                        while ((match = optionRegex.exec(optionsText)) !== null) {
+                            options[parseInt(match[1]) - 1] = match[2].trim();
+                        }
+                        
+                        // 轉換答案（A-D 轉換為 1-4）
+                        let answerIndex = -1;
+                        if (/^[A-D]$/.test(answer)) {
+                            answerIndex = answer.charCodeAt(0) - 65; // A->0, B->1, etc.
+                        } else if (/^[1-4]$/.test(answer)) {
+                            answerIndex = parseInt(answer) - 1;
+                        }
+                        
+                        if (answerIndex >= 0 && answerIndex < options.length) {
+                            questions.push({
+                                id: questionNumber,
+                                question: questionText,
+                                options: options,
+                                answer: answerIndex
+                            });
+                        }
+                    }
+                    
+                    if (questions.length === 0) {
+                        throw new Error('無法解析任何題目，請確認格式是否正確');
+                    }
+                    
+                    // 顯示轉換結果
+                    const resultDiv = dialog.querySelector('#conversionResult');
+                    resultDiv.innerHTML = `
+                        <div class="success-message">
+                            ✅ 成功轉換 ${questions.length} 題
+                        </div>
+                        <button id="useQuestionsBtn">使用這些題目</button>
+                    `;
+                    
+                    // 使用題目按鈕點擊事件
+                    dialog.querySelector('#useQuestionsBtn').addEventListener('click', () => {
+                        // 儲存題目到 IndexedDB
+                        saveQuestionsToDB(questions)
+                            .then(() => {
+                                showSuccessMessage(`已成功載入 ${questions.length} 題`);
+                                document.body.removeChild(dialog);
+                                // 重新載入題目
+                                return loadQuestionsFromDB();
+                            })
+                            .then(loadedQuestions => {
+                                questions = loadedQuestions;
+                                // 啟用測驗按鈕
+                                document.getElementById('startQuizBtn').disabled = false;
+                            })
+                            .catch(error => {
+                                console.error('儲存題目失敗:', error);
+                                showErrorMessage('儲存題目失敗: ' + error.message);
+                            });
+                    });
+                    
+                } catch (error) {
+                    const resultDiv = dialog.querySelector('#conversionResult');
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            ❌ 轉換失敗: ${error.message}
+                        </div>
+                    `;
+                    console.error('轉換失敗:', error);
+                }
+            }
         }
 
         function showSuccessMessage(message) {
             const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed; top: 20px; right: 20px; z-index: 1000;
-                background: #4CAF50; color: white; padding: 15px 25px;
-                border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                font-size: 16px; font-weight: 500;
-                animation: slideIn 0.3s ease-out;
+            toast.className = 'toast-message success';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">✅</span>
+                    <span class="toast-text">${message}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
             `;
-            toast.textContent = message;
+            
             document.body.appendChild(toast);
             
+            // 3秒後自動消失
             setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease-out';
+                toast.style.animation = 'fadeOut 0.3s forwards';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
-            
-            // 添加動畫樣式
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes fadeOut {
-                    from { opacity: 1; }
-                    to { opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
         }
 
         function showErrorMessage(message) {
             const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed; top: 20px; right: 20px; z-index: 1000;
-                background: #f44336; color: white; padding: 15px 25px;
-                border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                font-size: 16px; font-weight: 500;
+            toast.className = 'toast-message error';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">❌</span>
+                    <span class="toast-text">${message}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
             
+            document.body.appendChild(toast);
+            
+            // 3秒後自動消失
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
