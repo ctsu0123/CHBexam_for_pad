@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.17</title>
+    <title>iPad 專用測驗系統 v1.18</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -897,10 +897,9 @@
             if (matches.length > 0) {
                 // 對每個選項進行處理
                 return matches.map(opt => {
-                    // 只移除 (1)、(2)、(3)、(4) 的括號，保留其他括號內容
-                    let cleanedOpt = opt;
-                    // 移除選項編號的括號
-                    cleanedOpt = cleanedOpt.replace(/\((1|2|3|4)\)/g, '');
+                    // 移除選項編號的括號，保留其他括號內容
+                    // 使用正則表達式只移除 (1)、(2)、(3)、(4) 的括號
+                    const cleanedOpt = opt.replace(/\((1|2|3|4)\)/g, '');
                     // 保留其他括號內容
                     return cleanedOpt.trim();
                 });
