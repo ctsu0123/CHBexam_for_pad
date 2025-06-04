@@ -548,26 +548,32 @@ function renderOptions(q, idx) {
     
     // 在「逐題瀏覽(不含答案)」和「隨機出題」模式下顯示選項按鈕
     if ((mode === 'hide-answer' || mode === 'random') && q.options) {
-        // 從選項文本中提取選項內容
-        const optionMatches = q.options.match(/\(\d+\)[^\n]+/g) || [];
+        // 只處理括號內是1、2、3、4的選項，其他內容保持原樣
+        const optionsText = q.options;
+        const matches = optionsText.match(/\((1|2|3|4)\)[^\n]+/g) || [];
         
-        optionMatches.forEach((opt, index) => {
-            const optionNum = index + 1;
-            const selected = userAnswers[currentIdx] == optionNum ? 'selected' : '';
-            let correct = '', wrong = '';
-            
-            // 只在選擇後顯示正確/錯誤狀態
-            if (userAnswers[currentIdx]) {
-                if (optionNum == answer) {
-                    correct = 'correct';
-                } else if (userAnswers[currentIdx] == optionNum) {
-                    wrong = 'wrong';
+        // 如果找到符合的選項，使用這些選項
+        if (matches.length > 0) {
+            matches.forEach((opt, index) => {
+                const optionNum = index + 1;
+                const selected = userAnswers[currentIdx] == optionNum ? 'selected' : '';
+                let correct = '', wrong = '';
+                
+                // 只在選擇後顯示正確/錯誤狀態
+                if (userAnswers[currentIdx]) {
+                    if (optionNum == answer) {
+                        correct = 'correct';
+                    } else if (userAnswers[currentIdx] == optionNum) {
+                        wrong = 'wrong';
+                    }
                 }
-            }
-            
-            options += `<button class="${btnClass} ${selected} ${correct} ${wrong}" data-option="${opt.trim()}" data-opt="${optionNum}">${optionNum}</button>`;
-        });
-        
+                
+                options += `<button class="${btnClass} ${selected} ${correct} ${wrong}" data-option="${opt.trim()}" data-opt="${optionNum}">${optionNum}</button>`;
+            });
+        } else {
+            // 如果沒有找到符合的選項，直接顯示原始內容
+            options = `<div class="original-options">${optionsText}</div>`;
+        }
         return `<div class="options">${options}</div>`;
     }
     
