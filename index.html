@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.21</title>
+    <title>iPad 專用測驗系統 v1.22</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -609,7 +609,7 @@
                 <h3>🔍 關鍵字查詢</h3>
                 <div class="search-input-group">
                     <input type="text" id="searchInput" class="search-input" placeholder="輸入關鍵字搜尋題目...">
-                    <button class="file-button" onclick="performSearch()" style="margin-left: 10px;">查詢</button>
+                    <button class="file-button" onclick="performSearch()">查詢</button>
                 </div>
             </div>
 
@@ -794,6 +794,12 @@
                 
                 startQuiz();
             });
+
+            // 搜尋功能
+            const searchBtn = document.querySelector('.search-input-group button');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', performSearch);
+            }
 
             // 導航按鈕
             document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
@@ -1306,9 +1312,18 @@
         }
 
         function performSearch() {
+            console.log('開始查詢...');
             const searchTerm = document.getElementById('searchInput').value.trim();
             if (!searchTerm) {
                 showErrorMessage('請輸入關鍵字');
+                return;
+            }
+
+            console.log('查詢條件:', searchTerm);
+            console.log('總題數:', questions.length);
+
+            if (questions.length === 0) {
+                showErrorMessage('沒有題目可以搜尋，請先上傳題目檔案');
                 return;
             }
 
@@ -1317,9 +1332,17 @@
                 const questionText = question.question.toLowerCase();
                 const optionsText = question.options.join(';').toLowerCase();
                 const answerText = question.correctAnswer.toLowerCase();
-                return questionText.includes(searchTerm.toLowerCase()) ||
-                       optionsText.includes(searchTerm.toLowerCase()) ||
-                       answerText.includes(searchTerm.toLowerCase());
+                
+                const matchQuestion = questionText.includes(searchTerm.toLowerCase());
+                const matchOptions = optionsText.includes(searchTerm.toLowerCase());
+                const matchAnswer = answerText.includes(searchTerm.toLowerCase());
+                
+                console.log(`題號 ${question.id}:`, 
+                    `題目匹配: ${matchQuestion}`,
+                    `選項匹配: ${matchOptions}`,
+                    `答案匹配: ${matchAnswer}`);
+                
+                return matchQuestion || matchOptions || matchAnswer;
             });
 
             if (searchResults.length === 0) {
@@ -1327,8 +1350,15 @@
                 return;
             }
 
+            console.log('找到符合條件的題目數量:', searchResults.length);
+
             // 生成查詢結果網頁
             const resultWindow = window.open('', '_blank');
+            if (!resultWindow) {
+                showErrorMessage('無法開啟新視窗，請確認瀏覽器設置');
+                return;
+            }
+
             resultWindow.document.write(`
                 <!DOCTYPE html>
                 <html lang="zh-TW">
