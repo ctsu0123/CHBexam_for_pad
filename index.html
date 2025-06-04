@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.10</title>
+    <title>iPad 專用測驗系統 v1.11</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -52,13 +52,44 @@
             flex: 1;
             background: rgba(45, 45, 68, 0.95);
             border-radius: 20px;
-            padding: 40px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            height: calc(100vh - 200px);
+        }
+
+        .question-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            text-align: center;
+            position: relative;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: 100%;
+        }
+
+        .question-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .question-display::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .question-display::-webkit-scrollbar-thumb {
+            background: rgba(30, 136, 229, 0.3);
+            border-radius: 4px;
+        }
+
+        .question-display::-webkit-scrollbar-thumb:hover {
+            background: rgba(30, 136, 229, 0.5);
         }
 
         h1 {
