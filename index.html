@@ -607,7 +607,10 @@
 
             <div class="section">
                 <h3>🔍 關鍵字查詢</h3>
-                <input type="text" id="searchInput" class="search-input" placeholder="輸入關鍵字搜尋題目...">
+                <div class="search-input-group">
+                    <input type="text" id="searchInput" class="search-input" placeholder="輸入關鍵字搜尋題目...">
+                    <button class="file-button" onclick="performSearch()" style="margin-left: 10px;">查詢</button>
+                </div>
             </div>
 
             <div class="section">
@@ -791,9 +794,6 @@
                 
                 startQuiz();
             });
-
-            // 搜尋功能
-            document.getElementById('searchInput').addEventListener('input', handleSearch);
 
             // 導航按鈕
             document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
@@ -1303,6 +1303,101 @@
                     console.error('轉換失敗:', error);
                 }
             }
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (!searchTerm) {
+                showErrorMessage('請輸入關鍵字');
+                return;
+            }
+
+            // 搜尋題目、選項和答案
+            const searchResults = questions.filter(question => {
+                const questionText = question.question.toLowerCase();
+                const optionsText = question.options.join(';').toLowerCase();
+                const answerText = question.correctAnswer.toLowerCase();
+                return questionText.includes(searchTerm.toLowerCase()) ||
+                       optionsText.includes(searchTerm.toLowerCase()) ||
+                       answerText.includes(searchTerm.toLowerCase());
+            });
+
+            if (searchResults.length === 0) {
+                showErrorMessage('沒有找到相關題目');
+                return;
+            }
+
+            // 生成查詢結果網頁
+            const resultWindow = window.open('', '_blank');
+            resultWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="zh-TW">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>查詢結果 - iPad 測驗系統</title>
+                    <style>
+                        body {
+                            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+                            background: #f5f5f5;
+                            padding: 20px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }
+                        th, td {
+                            padding: 12px;
+                            text-align: left;
+                            border-bottom: 1px solid #ddd;
+                        }
+                        th {
+                            background-color: #f5f5f5;
+                            font-weight: bold;
+                        }
+                        .highlight {
+                            background-color: #ffff00;
+                            font-weight: bold;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>查詢結果</h1>
+                    <p>共找到 ${searchResults.length} 符合「${searchTerm}」的題目</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>題號</th>
+                                <th>答案</th>
+                                <th>題目</th>
+                                <th>選項</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${searchResults.map(question => {
+                                const highlightText = (text) => {
+                                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                                    return text.replace(regex, '<span class="highlight">$1</span>');
+                                };
+                                
+                                return `
+                                    <tr>
+                                        <td>${question.id}</td>
+                                        <td>${highlightText(question.correctAnswer)}</td>
+                                        <td>${highlightText(question.question)}</td>
+                                        <td>${question.options.map(opt => highlightText(opt)).join('; ')}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `);
+            
+            resultWindow.document.close();
+            showSuccessMessage(`找到 ${searchResults.length} 符合的題目`);
         }
 
         function showSuccessMessage(message) {
