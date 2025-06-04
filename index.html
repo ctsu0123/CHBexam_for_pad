@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.19</title>
+    <title>iPad 專用測驗系統 v1.20</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -874,42 +874,58 @@
             // 跳過標題行
             for (let i = 1; i < data.length; i++) {
                 const row = data[i];
-                if (!row || row.length < 3) continue;
+                // 確保有足夠的欄位（至少4欄：題號、答案、題目、選項）
+                if (!row || row.length < 4) continue;
                 
-                // 只處理括號內是1、2、3、4的選項，其他內容保持原樣
-                const optionsText = row[1];
+                const questionNumber = row[0];  // 題號
+                const answer = row[1];          // 答案
+                const questionText = row[2];     // 題目
+                const optionsText = row[3];      // 選項
+                
                 if (!optionsText) continue;
                 
-                const options = optionsText.match(/\((1|2|3|4)\)[^\n]+/g) || [];
+                // 解析選項，支援多種格式：
+                // 1. (1)選項A (2)選項B (3)選項C (4)選項D
+                // 2. A.選項A B.選項B C.選項C D.選項D
+                let options = [];
                 
+                // 嘗試匹配 (1)選項A 格式
+                const numberPattern = /\(([1-4])\)([^(]+)/g;
+                let match;
+                while ((match = numberPattern.exec(optionsText)) !== null) {
+                    const index = parseInt(match[1]) - 1;
+                    const optionText = match[2].trim();
+                    options[index] = optionText;
+                }
+                
+                // 如果沒有匹配到 (1) 格式，嘗試匹配 A. 格式
+                if (options.length === 0) {
+                    const letterPattern = /([A-D])\.\s*([^A-D]+)/g;
+                    while ((match = letterPattern.exec(optionsText)) !== null) {
+                        const index = match[1].charCodeAt(0) - 65; // A->0, B->1, etc.
+                        const optionText = match[2].trim();
+                        options[index] = optionText;
+                    }
+                }
+                
+                // 如果成功解析出選項
                 if (options.length > 0) {
-                    // 移除選項編號的括號，保留其他括號內容
-                    const cleanedOptions = options.map(opt => {
-                        const cleanedOpt = opt.replace(/\((1|2|3|4)\)/g, '');
-                        return cleanedOpt.trim();
-                    });
-                    
-                    // 將選項分配到 A、B、C、D
-                    const optionsMap = {
-                        'optionA': cleanedOptions[0] || '',
-                        'optionB': cleanedOptions[1] || '',
-                        'optionC': cleanedOptions[2] || '',
-                        'optionD': cleanedOptions[3] || ''
-                    };
-                    
                     questions.push({
-                        question: row[0],
-                        answer: row[2],
-                        ...optionsMap,
-                        originalAnswer: row[2] // 保留原始答案格式
+                        question: questionText,
+                        answer: answer,
+                        optionA: options[0] || '',
+                        optionB: options[1] || '',
+                        optionC: options[2] || '',
+                        optionD: options[3] || '',
+                        originalAnswer: answer
                     });
                 } else {
-                    // 如果沒有找到符合的選項，使用原始內容
+                    // 如果無法解析選項，將整個選項文字作為一個欄位
                     questions.push({
-                        question: row[0],
-                        answer: row[2],
+                        question: questionText,
+                        answer: answer,
                         options: optionsText,
-                        originalAnswer: row[2] // 保留原始答案格式
+                        originalAnswer: answer
                     });
                 }
             }
