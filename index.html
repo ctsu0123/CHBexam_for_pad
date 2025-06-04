@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.13</title>
+    <title>iPad 專用測驗系統 v1.14</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -717,9 +717,31 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', async function() {
+            // 清除所有暫存資料
+            questions = [];
+            currentQuestionIndex = 0;
+            currentMode = '';
+            filteredQuestions = [];
+            touchStartX = 0;
+            touchEndX = 0;
+            isSwipeInProgress = false;
+            
+            // 重置檔案狀態
+            const fileNameSpan = document.getElementById('file-name');
+            if (fileNameSpan) {
+                fileNameSpan.textContent = '請選擇 Excel 檔案...';
+            }
+            
+            // 重置開始按鈕狀態
+            const startBtn = document.getElementById('startQuizBtn');
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.style.backgroundColor = '#ccc';
+            }
+            
             setupEventListeners();
             showSwipeHint();
-            // 嘗試從 IndexedDB 載入題目
+            
             try {
                 const hasQuestions = await loadQuestionsFromDB();
                 if (hasQuestions) {
@@ -860,26 +882,15 @@
         }
 
         function parseOptions(optionsText) {
-            if (!optionsText) return [];
+            // 只處理括號內是1、2、3、4的選項，其他內容保持原樣
+            const matches = optionsText.match(/\((1|2|3|4)\)[^\n]+/g) || [];
             
-            // 處理 (1)(2)(3)(4) 格式的選項
-            const options = [];
-            const matches = optionsText.match(/\((\d+)\)([^(]*?)(?=\(\d+\)|$)/g);
-            
-            if (matches) {
-                matches.forEach(match => {
-                    const content = match.replace(/^\(\d+\)/, '').trim();
-                    if (content) {
-                        options.push(content);
-                    }
-                });
+            if (matches.length > 0) {
+                return matches.map(opt => opt.trim());
             } else {
-                // 如果不是標準格式，嘗試其他分隔符
-                const splitOptions = optionsText.split(/[①②③④]|[1234][\.\)、]|[ABCD][\.\)、]/);
-                options.push(...splitOptions.filter(opt => opt.trim()).map(opt => opt.trim()));
+                // 如果沒有找到符合的選項，返回原始內容
+                return [optionsText.trim()];
             }
-            
-            return options;
         }
 
         function startQuiz() {

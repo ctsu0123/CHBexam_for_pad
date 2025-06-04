@@ -746,8 +746,45 @@ function reset() {
     correctCount = 0;
     wrongCount = 0;
     outputSection.innerHTML = '';
+    // 重置檔案狀態
+    const fileNameSpan = document.getElementById('file-name');
+    if (fileNameSpan) {
+        fileNameSpan.textContent = '請選擇 Excel 檔案...';
+    }
+    // 重置開始按鈕狀態
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.style.backgroundColor = '#ccc';
+    }
 }
-window.onbeforeunload = reset;
+
+// 頁面載入時呼叫 reset 並初始化觸控事件
+function initPage() {
+    reset();
+    initTouchEvents();
+    initMobileMenu();
+    optimizeForIOS();
+    handleResize();
+    
+    // 監聽視窗大小變化
+    window.addEventListener('resize', handleResize);
+    
+    // 在 iOS 上禁用雙擊縮放
+    if (isIOS()) {
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    }
+}
+
+// 頁面載入完成後初始化
+document.addEventListener('DOMContentLoaded', initPage);
 
 // 關鍵字查詢功能
 const searchKeyword = document.getElementById('search-keyword');
@@ -776,53 +813,30 @@ function searchQuestions() {
                 '<p>建議：</p>' +
                 '<ul>' +
                     '<li>請先在左側選擇Excel檔案</li>' +
-                    '<li>點擊「確認」按鈕載入題庫</li>' +
+                    '<li>檔案格式應包含題號、答案、題目和選項欄位</li>' +
                 '</ul>';
             win.document.write(html);
         }
         return;
     }
 
+    // 取得關鍵字
     const keyword = searchKeyword.value.trim();
     if (!keyword) {
         alert('請輸入關鍵字');
         return;
     }
 
-    // 使用部分相同查詢
-    const keywordLower = keyword.toLowerCase();
+    // 搜尋題目和選項
     const results = questions.filter(q => {
-        const question = q.question.toLowerCase();
-        const options = q.options.toLowerCase();
-        const answer = q.answer.toLowerCase();
-        const id = q.id.toString().toLowerCase();
-        return question.includes(keywordLower) || 
-               options.includes(keywordLower) || 
-               answer.includes(keywordLower) || 
-               id.includes(keywordLower);
+        const questionText = q.question.toLowerCase();
+        const optionsText = q.options.toLowerCase();
+        return questionText.includes(keyword.toLowerCase()) ||
+               optionsText.includes(keyword.toLowerCase());
     });
 
     if (!results.length) {
-        const win = window.open('', '_blank');
-        if (win) {
-            let html = '<style>' +
-                'body { font-family: Arial, sans-serif; margin: 20px; }' +
-                'h3 { color: #333; }' +
-                'p { color: #666; margin: 10px 0; }' +
-                'ul { margin: 10px 0; padding-left: 20px; }' +
-                'li { margin: 5px 0; }' +
-                '</style>' +
-                '<h3>查詢結果</h3>' +
-                '<p>抱歉，未找到符合關鍵字「' + keyword + '」的題目。</p>' +
-                '<p>建議：</p>' +
-                '<ul>' +
-                    '<li>請確認關鍵字是否正確</li>' +
-                    '<li>嘗試使用不同的查詢模式（完全相同/部分相同）</li>' +
-                    '<li>檢查題庫是否已正確載入</li>' +
-                '</ul>' +
-                '<p>目前題庫中共有 ' + questions.length + ' 題。</p>';
-            win.document.write(html);
-        }
+        alert('沒有找到相符的題目');
         return;
     }
 
