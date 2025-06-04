@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.16</title>
+    <title>iPad 專用測驗系統 v1.17</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -739,17 +739,26 @@
                 startBtn.style.backgroundColor = '#ccc';
             }
             
+            // 清除 IndexedDB 的內容
+            try {
+                await clearDB();
+                console.log('IndexedDB 已清除');
+            } catch (error) {
+                console.error('清除 IndexedDB 失敗:', error);
+            }
+            
             setupEventListeners();
             showSwipeHint();
             
-            try {
-                const hasQuestions = await loadQuestionsFromDB();
-                if (hasQuestions) {
-                    showSuccessMessage(`已載入 ${questions.length} 題`);
-                }
-            } catch (error) {
-                console.error('初始化載入題目失敗:', error);
-            }
+            // 不再自動載入 IndexedDB 的內容
+            // try {
+            //     const hasQuestions = await loadQuestionsFromDB();
+            //     if (hasQuestions) {
+            //         showQuizInterface();
+            //     }
+            // } catch (error) {
+            //     console.error('初始化失敗:', error);
+            // }
         });
 
         function setupEventListeners() {
