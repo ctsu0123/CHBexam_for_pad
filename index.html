@@ -863,46 +863,57 @@
 
         function parseQuestions(data) {
             questions = [];
-            const rows = data.split('\n');
             
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i].split('\t');
-                if (row.length >= 2) {
-                    // 只處理括號內是1、2、3、4的選項，其他內容保持原樣
-                    const options = row[1].match(/\((1|2|3|4)\)[^\n]+/g) || [];
+            // 確保數據格式正確
+            if (!Array.isArray(data)) {
+                console.error('數據格式錯誤:', data);
+                showErrorMessage('檔案格式錯誤，請確認是正確的 Excel 檔案');
+                return;
+            }
+            
+            // 跳過標題行
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length < 3) continue;
+                
+                // 只處理括號內是1、2、3、4的選項，其他內容保持原樣
+                const optionsText = row[1];
+                if (!optionsText) continue;
+                
+                const options = optionsText.match(/\((1|2|3|4)\)[^\n]+/g) || [];
+                
+                if (options.length > 0) {
+                    // 移除選項編號的括號，保留其他括號內容
+                    const cleanedOptions = options.map(opt => {
+                        const cleanedOpt = opt.replace(/\((1|2|3|4)\)/g, '');
+                        return cleanedOpt.trim();
+                    });
                     
-                    if (options.length > 0) {
-                        // 移除選項編號的括號，保留其他括號內容
-                        const cleanedOptions = options.map(opt => {
-                            const cleanedOpt = opt.replace(/\((1|2|3|4)\)/g, '');
-                            return cleanedOpt.trim();
-                        });
-                        
-                        // 將選項分配到 A、B、C、D
-                        const optionsMap = {
-                            'optionA': cleanedOptions[0] || '',
-                            'optionB': cleanedOptions[1] || '',
-                            'optionC': cleanedOptions[2] || '',
-                            'optionD': cleanedOptions[3] || ''
-                        };
-                        
-                        questions.push({
-                            question: row[0],
-                            answer: row[2],
-                            ...optionsMap,
-                            originalAnswer: row[2] // 保留原始答案格式
-                        });
-                    } else {
-                        // 如果沒有找到符合的選項，使用原始內容
-                        questions.push({
-                            question: row[0],
-                            answer: row[2],
-                            options: row[1],
-                            originalAnswer: row[2] // 保留原始答案格式
-                        });
-                    }
+                    // 將選項分配到 A、B、C、D
+                    const optionsMap = {
+                        'optionA': cleanedOptions[0] || '',
+                        'optionB': cleanedOptions[1] || '',
+                        'optionC': cleanedOptions[2] || '',
+                        'optionD': cleanedOptions[3] || ''
+                    };
+                    
+                    questions.push({
+                        question: row[0],
+                        answer: row[2],
+                        ...optionsMap,
+                        originalAnswer: row[2] // 保留原始答案格式
+                    });
+                } else {
+                    // 如果沒有找到符合的選項，使用原始內容
+                    questions.push({
+                        question: row[0],
+                        answer: row[2],
+                        options: optionsText,
+                        originalAnswer: row[2] // 保留原始答案格式
+                    });
                 }
             }
+            
             filteredQuestions = [...questions];
             currentQuestionIndex = 0;
             
