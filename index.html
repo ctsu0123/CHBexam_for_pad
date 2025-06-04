@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.14</title>
+    <title>iPad 專用測驗系統 v1.15</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -886,7 +886,12 @@
             const matches = optionsText.match(/\((1|2|3|4)\)[^\n]+/g) || [];
             
             if (matches.length > 0) {
-                return matches.map(opt => opt.trim());
+                // 移除選項編號的括號，保留其他內容
+                return matches.map(opt => {
+                    // 移除 (1)、(2)、(3)、(4) 的括號
+                    const cleanedOpt = opt.replace(/\((1|2|3|4)\)/g, '');
+                    return cleanedOpt.trim();
+                });
             } else {
                 // 如果沒有找到符合的選項，返回原始內容
                 return [optionsText.trim()];
