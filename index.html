@@ -1326,12 +1326,17 @@
                 showErrorMessage('沒有題目可以搜尋，請先上傳題目檔案');
                 return;
             }
-
-            // 搜尋題目、選項和答案
+            
+            // 過濾符合搜尋條件的題目
             const searchResults = questions.filter(question => {
-                const questionText = question.question.toLowerCase();
-                const optionsText = question.options.join(';').toLowerCase();
-                const answerText = question.correctAnswer.toLowerCase();
+                const searchFields = [
+                    question.question,
+                    question.optionA,
+                    question.optionB,
+                    question.optionC,
+                    question.optionD,
+                    question.answer
+                ];
                 
                 const matchQuestion = questionText.includes(searchTerm.toLowerCase());
                 const matchOptions = optionsText.includes(searchTerm.toLowerCase());
