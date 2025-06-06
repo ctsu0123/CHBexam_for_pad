@@ -4,9 +4,14 @@ import { showSuccessMessage, showErrorMessage, updateQuestionCount } from './ui.
 
 // 處理檔案上傳
 export async function handleFileUpload(event) {
+    console.log('開始處理檔案上傳...');
     const file = event.target.files[0];
-    if (!file) return;
-
+    if (!file) {
+        console.log('沒有選擇檔案');
+        return;
+    }
+    
+    console.log('已選擇檔案:', file.name);
     const reader = new FileReader();
     
     reader.onload = async function(e) {
