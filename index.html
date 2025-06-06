@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.23</title>
+    <title>iPad 專用測驗系統 v1.24</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script type="module" src="db.js"></script>
     <style>
@@ -1087,26 +1087,49 @@
         }
 
         function handleSearch() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            console.log('開始執行搜尋...');
+            
+            // 檢查是否有題目
+            if (questions.length === 0) {
+                showErrorMessage('請先上傳題目檔案');
+                console.error('錯誤：尚未載入任何題目');
+                return;
+            }
+            
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            console.log('搜尋關鍵字:', searchTerm);
             
             if (!searchTerm) {
                 filteredQuestions = [...questions];
+                console.log('未輸入關鍵字，顯示所有題目，共', filteredQuestions.length, '題');
             } else {
                 filteredQuestions = questions.filter(q => 
-                    q.question.toLowerCase().includes(searchTerm) ||
-                    q.optionA.toLowerCase().includes(searchTerm) ||
-                    q.optionB.toLowerCase().includes(searchTerm) ||
-                    q.optionC.toLowerCase().includes(searchTerm) ||
-                    q.optionD.toLowerCase().includes(searchTerm) ||
-                    q.number.toString().includes(searchTerm)
+                    (q.question && q.question.toLowerCase().includes(searchTerm)) ||
+                    (q.optionA && q.optionA.toLowerCase().includes(searchTerm)) ||
+                    (q.optionB && q.optionB.toLowerCase().includes(searchTerm)) ||
+                    (q.optionC && q.optionC.toLowerCase().includes(searchTerm)) ||
+                    (q.optionD && q.optionD.toLowerCase().includes(searchTerm)) ||
+                    (q.number && q.number.toString().includes(searchTerm))
                 );
+                console.log('找到符合條件的題目:', filteredQuestions.length, '題');
             }
             
             currentQuestionIndex = 0;
-            if (currentMode && filteredQuestions.length > 0) {
-                displayQuestion();
-                showQuizInterface();
+            
+            if (filteredQuestions.length === 0) {
+                showErrorMessage('找不到符合條件的題目');
+                return;
             }
+            
+            // 如果沒有選擇模式，使用預設模式
+            if (!currentMode) {
+                currentMode = 'browse-with-answer';
+                document.getElementById('mode-browse-with-answer').checked = true;
+            }
+            
+            displayQuestion();
+            showQuizInterface();
+            showSuccessMessage(`找到 ${filteredQuestions.length} 筆符合的題目`);
         }
 
         function showQuizInterface() {
