@@ -1,3 +1,6 @@
+// 導入 UI 函數
+import { showErrorMessage } from './ui.js';
+
 // 題目相關的狀態
 let questions = [];
 let currentQuestionIndex = 0;

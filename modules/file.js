@@ -1,5 +1,5 @@
 import { saveQuestionsToDB } from './db.js';
-import { parseQuestions } from './questions.js';
+import { parseQuestions, setQuestions } from './questions.js';
 import { showSuccessMessage, showErrorMessage, updateQuestionCount } from './ui.js';
 
 // 處理檔案上傳
@@ -22,8 +22,17 @@ export async function handleFileUpload(event) {
             // 儲存到 IndexedDB
             const count = await saveQuestionsToDB(questions);
             
+            // 更新全局的 questions 變量
+            setQuestions(questions);
+            
             showSuccessMessage(`成功載入 ${count} 題`);
             updateQuestionCount(count);
+            
+            // 啟用開始測驗按鈕
+            const startBtn = document.getElementById('startQuizBtn');
+            if (startBtn) {
+                startBtn.disabled = false;
+            }
         } catch (error) {
             console.error('處理檔案上傳錯誤:', error);
             showErrorMessage('檔案讀取失敗，請確認格式正確');
