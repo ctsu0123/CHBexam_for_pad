@@ -258,57 +258,92 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
     
     // 顯示答案（含答案模式）
     console.log('Current question:', question);
+    console.log('Question options:', question.options);
+    console.log('Original answer:', question.originalAnswer);
+    
     const answerDisplay = document.getElementById('answerDisplay');
-    if (answerDisplay) {
-        if (mode === 'browse-with-answer') {
-            // 使用原始答案值
-            const correctAnswer = question.originalAnswer ? question.originalAnswer.toString().trim() : '';
-            console.log('Original answer:', correctAnswer, 'Options:', question.options);
+    if (!answerDisplay) {
+        console.error('找不到答案顯示區域');
+        return;
+    }
+    
+    if (mode === 'browse-with-answer') {
+        // 確保 originalAnswer 存在且有效
+        const correctAnswer = question.originalAnswer ? question.originalAnswer.toString().trim() : '';
+        console.log('顯示正確答案:', correctAnswer);
+        
+        // 顯示正確答案
+        answerDisplay.style.display = 'block';
+        answerDisplay.textContent = `正確答案：${correctAnswer}`;
+        
+        // 使用 requestAnimationFrame 確保 DOM 更新
+        requestAnimationFrame(() => {
+            const options = document.querySelectorAll('.option');
+            console.log('找到選項數量:', options.length);
             
-            // 顯示正確答案
-            answerDisplay.style.display = 'block';
-            answerDisplay.textContent = `正確答案：${correctAnswer}`;
+            if (options.length === 0) {
+                console.error('沒有找到任何選項元素');
+                return;
+            }
             
-            // 使用 setTimeout 確保 DOM 已經完全渲染
-            setTimeout(() => {
-                const options = document.querySelectorAll('.option');
-                let found = false;
+            let found = false;
+            
+            // 方法1: 比對選項值
+            options.forEach((opt, index) => {
+                const input = opt.querySelector('input[type="radio"]');
+                if (!input) return;
                 
-                options.forEach((opt) => {
-                    const input = opt.querySelector('input[type="radio"]');
-                    if (input) {
-                        const optValue = input.value.trim();
-                        console.log('Checking option:', optValue, 'vs correct:', correctAnswer);
-                        
-                        // 清除之前的高亮
-                        opt.classList.remove('correct');
-                        
-                        // 檢查選項值是否等於正確答案
-                        if (optValue === correctAnswer) {
-                            opt.classList.add('correct');
-                            found = true;
-                            console.log('Marked correct answer:', optValue);
-                        }
+                const optValue = input.value.trim();
+                console.log(`選項 ${index + 1} 值:`, optValue);
+                
+                // 清除之前的高亮
+                opt.classList.remove('correct');
+                
+                // 檢查選項值是否等於正確答案
+                if (optValue === correctAnswer) {
+                    opt.classList.add('correct');
+                    found = true;
+                    console.log('通過值比對標記正確答案:', optValue);
+                }
+            });
+            
+            // 方法2: 如果值比對失敗，嘗試使用索引
+            if (!found) {
+                console.warn('無法通過值比對找到正確答案，嘗試使用索引');
+                try {
+                    const answerIndex = parseInt(correctAnswer) - 1;
+                    if (!isNaN(answerIndex) && answerIndex >= 0 && answerIndex < options.length) {
+                        options[answerIndex].classList.add('correct');
+                        found = true;
+                        console.log('通過索引標記正確答案，索引:', answerIndex);
+                    }
+                } catch (e) {
+                    console.error('使用索引標記正確答案時出錯:', e);
+                }
+            }
+            
+            // 方法3: 如果還是找不到，嘗試比對選項文字
+            if (!found) {
+                console.warn('無法通過索引找到正確答案，嘗試比對選項文字');
+                options.forEach((opt, index) => {
+                    const label = opt.querySelector('label');
+                    if (!label) return;
+                    
+                    const labelText = label.textContent.trim();
+                    if (labelText.startsWith(`(${correctAnswer})`)) {
+                        opt.classList.add('correct');
+                        found = true;
+                        console.log('通過文字比對標記正確答案:', labelText);
                     }
                 });
-                
-                if (!found) {
-                    console.warn('Could not find matching option for answer:', correctAnswer);
-                    // 如果沒有找到匹配的選項，嘗試使用原始答案索引
-                    try {
-                        const answerIndex = parseInt(correctAnswer) - 1;
-                        if (!isNaN(answerIndex) && answerIndex >= 0 && answerIndex < options.length) {
-                            options[answerIndex].classList.add('correct');
-                            console.log('Marked correct answer by index:', answerIndex);
-                        }
-                    } catch (e) {
-                        console.error('Error marking correct answer by index:', e);
-                    }
-                }
-            }, 100);
-        } else {
-            answerDisplay.style.display = 'none';
-        }
+            }
+            
+            if (!found) {
+                console.error('無法標記正確答案，請檢查題目數據:', question);
+            }
+        });
+    } else {
+        answerDisplay.style.display = 'none';
     }
     
     // 如果是含答案模式，確保正確答案被標記

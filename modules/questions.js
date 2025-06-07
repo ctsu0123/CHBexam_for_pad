@@ -185,6 +185,7 @@ export function parseQuestions(data) {
             
             // 轉換答案為數字索引 (0-3)
             const answerIndex = parseInt(normalizedAnswer) - 1;
+            console.log(`解析題目 ${i + 1} - 原始答案: "${normalizedAnswer}", 索引: ${answerIndex}`);
             
             // 確保答案索引在有效範圍內
             if (answerIndex < 0 || answerIndex >= options.length) {
