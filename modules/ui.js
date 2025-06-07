@@ -283,12 +283,12 @@ function showAnswer(selectedOption, question, mode) {
     const selectedNumber = selectedOption ? parseInt(selectedOption) : null;
     
     if (selectedNumber === correctAnswerNumber) {
-        answerDisplay.innerHTML = `✅ 正確！答案是：(${correctAnswerNumber})`;
+        answerDisplay.innerHTML = `✅ 正確！答案是：${correctAnswerNumber}`;
         answerDisplay.style.background = 'rgba(76, 175, 80, 0.2)';
         answerDisplay.style.borderColor = '#4CAF50';
         answerDisplay.style.color = '#81c784';
     } else {
-        answerDisplay.innerHTML = `❌ 錯誤！正確答案是：(${correctAnswerNumber})`;
+        answerDisplay.innerHTML = `❌ 錯誤！正確答案是：${correctAnswerNumber}`;
         answerDisplay.style.background = 'rgba(244, 67, 54, 0.2)';
         answerDisplay.style.borderColor = '#f44336';
         answerDisplay.style.color = '#ef5350';
@@ -298,13 +298,13 @@ function showAnswer(selectedOption, question, mode) {
     
     // 標示正確答案
     document.querySelectorAll('.option').forEach(opt => {
-        // 從 (1) 選項內容 中提取數字
-        const match = opt.textContent.match(/\((\d)\)/);
-        if (match && match[1]) {
-            const optNumber = match[1];
-            if (optNumber === correctAnswer) {
+        // 獲取選項的 input 元素
+        const input = opt.querySelector('input[type="radio"]');
+        if (input) {
+            const optValue = input.value; // 這會是 "1", "2", "3" 或 "4"
+            if (optValue === correctAnswerNumber.toString()) {
                 opt.classList.add('correct');
-            } else if (optNumber === selectedOption) {
+            } else if (optValue === selectedOption) {
                 opt.classList.add('incorrect');
             }
         }
