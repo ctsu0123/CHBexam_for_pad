@@ -9,6 +9,72 @@ let filteredQuestions = [];
 // 自定義事件
 const questionUpdatedEvent = new Event('questionsUpdated');
 
+// 更新導航按鈕狀態
+function updateNavigationButtons() {
+    try {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentQuestionIndex <= 0;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = currentQuestionIndex >= filteredQuestions.length - 1;
+        }
+    } catch (error) {
+        console.error('更新導航按鈕時發生錯誤:', error);
+    }
+}
+
+// 顯示當前題目
+export function displayQuestion() {
+    try {
+        const question = filteredQuestions[currentQuestionIndex];
+        if (!question) {
+            console.error('找不到當前題目，索引:', currentQuestionIndex);
+            return false;
+        }
+
+        // 更新題號顯示
+        const questionNumberElement = document.getElementById('questionNumber');
+        if (questionNumberElement) {
+            questionNumberElement.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${filteredQuestions.length} 題`;
+        }
+
+        // 更新題目內容
+        const questionTextElement = document.getElementById('questionText');
+        if (questionTextElement) {
+            questionTextElement.textContent = question.question || '無題目內容';
+        }
+
+        // 更新選項
+        const optionsContainer = document.getElementById('optionsContainer');
+        if (optionsContainer) {
+            optionsContainer.innerHTML = ''; // 清空現有選項
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.innerHTML = `
+                    <input type="radio" name="answer" id="option${index}" value="${String.fromCharCode(65 + index)}">
+                    <label for="option${index}">${String.fromCharCode(65 + index)}. ${option || '無選項內容'}</label>
+                `;
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+
+        // 更新導航按鈕狀態
+        updateNavigationButtons();
+        
+        return true;
+    } catch (error) {
+        console.error('顯示題目時發生錯誤:', error);
+        showErrorMessage('顯示題目時發生錯誤: ' + error.message);
+        return false;
+    }
+}
+
 // 解析題目
 export function parseQuestions(data) {
     console.log('開始解析題目數據，共', data.length, '行');
@@ -347,21 +413,16 @@ export function startQuiz(mode, count = 10) {
 
         currentQuestionIndex = 0;
         
-        // 觸發更新事件
-        console.log('觸發 questionsUpdated 事件，過濾後題數:', filteredQuestions.length);
-        document.dispatchEvent(questionUpdatedEvent);
-        
         // 顯示第一題
         if (filteredQuestions.length > 0) {
             console.log('顯示第 1 題，共', filteredQuestions.length, '題');
             displayQuestion();
+            return true;
         } else {
             console.warn('沒有可用的題目');
             showWarningMessage('沒有可用的題目，請檢查題庫');
             return false;
         }
-        
-        return true;
     } catch (error) {
         console.error('開始測驗時發生錯誤:', error);
         showErrorMessage('開始測驗時發生錯誤: ' + error.message);
