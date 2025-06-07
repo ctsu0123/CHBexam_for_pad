@@ -57,7 +57,7 @@ export function openDB() {
 export async function saveQuestionsToDB(questions) {
     console.log('開始儲存題目到資料庫，共', questions.length, '題');
     
-    if (!db) {
+    if (!database) {
         try {
             console.log('資料庫尚未初始化，正在初始化...');
             await openDB();
@@ -69,13 +69,13 @@ export async function saveQuestionsToDB(questions) {
     }
     
     return new Promise((resolve, reject) => {
-        if (!db) {
+        if (!database) {
             const error = new Error('資料庫未正確初始化');
             console.error(error);
             return reject(error);
         }
         
-        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const transaction = database.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         
         // 監聽交易錯誤
