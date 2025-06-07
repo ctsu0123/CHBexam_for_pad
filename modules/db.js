@@ -25,19 +25,18 @@ export function openDB() {
         
         request.onupgradeneeded = (event) => {
             console.log('資料庫需要升級或初始化');
-            const db = event.target.result;
-            database = db;
+            database = event.target.result;
             
             // 如果物件儲存空間已存在，先刪除
-            if (db.objectStoreNames.contains(STORE_NAME)) {
+            if (database.objectStoreNames.contains(STORE_NAME)) {
                 console.log('刪除舊的資料表:', STORE_NAME);
-                db.deleteObjectStore(STORE_NAME);
+                database.deleteObjectStore(STORE_NAME);
             }
             
             try {
                 // 建立新的物件儲存空間
                 console.log('建立新的資料表:', STORE_NAME);
-                const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                const store = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
                 
                 // 建立索引以便搜尋
                 store.createIndex('number', 'number', { unique: false });
