@@ -24,22 +24,48 @@ export function parseQuestions(data) {
         return [];
     }
     
-    // 跳過標題行，從第2行開始（索引1）
+    // 獲取標題行（第一行）
+    const headers = data[0].map(h => String(h || '').trim().toLowerCase());
+    console.log('標題行:', headers);
+    
+    // 找出各欄位的索引
+    const numberIndex = headers.findIndex(h => h.includes('題號') || h.includes('number'));
+    const answerIndex = headers.findIndex(h => h.includes('答案') || h.includes('answer'));
+    const questionIndex = headers.findIndex(h => h.includes('題目') || h.includes('question'));
+    const optionsIndex = headers.findIndex(h => h.includes('選項') || h.includes('options'));
+    
+    console.log('欄位索引:', { numberIndex, answerIndex, questionIndex, optionsIndex });
+    
+    // 檢查必要欄位是否存在
+    if (numberIndex === -1 || answerIndex === -1 || questionIndex === -1 || optionsIndex === -1) {
+        const missingFields = [];
+        if (numberIndex === -1) missingFields.push('題號');
+        if (answerIndex === -1) missingFields.push('答案');
+        if (questionIndex === -1) missingFields.push('題目');
+        if (optionsIndex === -1) missingFields.push('選項');
+        
+        const errorMsg = `Excel 檔案缺少必要欄位: ${missingFields.join(', ')}。請確認檔案包含「題號」、「答案」、「題目」和「選項」欄位。`;
+        console.error(errorMsg);
+        showErrorMessage(errorMsg);
+        return [];
+    }
+    
+    // 從第二行開始解析數據（跳過標題行）
     for (let i = 1; i < data.length; i++) {
         const row = data[i];
         
         // 跳過空行或無效行
-        if (!row || !Array.isArray(row) || row.length < 4) {
+        if (!row || !Array.isArray(row)) {
             invalidRowCount++;
             console.warn(`第 ${i + 1} 行數據格式不正確，已跳過`, row);
             continue;
         }
         
         try {
-            const questionNumber = String(row[0] || '').trim();  // 題號
-            const answer = String(row[1] || '').trim();         // 答案
-            const questionText = String(row[2] || '').trim();    // 題目
-            const optionsText = String(row[3] || '').trim();     // 選項
+            const questionNumber = String(row[numberIndex] || '').trim();  // 題號
+            const answer = String(row[answerIndex] || '').trim();         // 答案
+            const questionText = String(row[questionIndex] || '').trim(); // 題目
+            const optionsText = String(row[optionsIndex] || '').trim();   // 選項
             
             // 驗證必填欄位
             if (!questionNumber || !answer || !questionText || !optionsText) {
