@@ -1,5 +1,5 @@
 // 導入 UI 函數
-import { showErrorMessage } from './ui.js';
+import { showErrorMessage, showWarningMessage } from './ui.js';
 
 // 題目相關的狀態
 let questions = [];
@@ -11,74 +11,150 @@ const questionUpdatedEvent = new Event('questionsUpdated');
 
 // 解析題目
 export function parseQuestions(data) {
+    console.log('開始解析題目數據，共', data.length, '行');
     const parsedQuestions = [];
+    let validQuestionCount = 0;
+    let invalidRowCount = 0;
     
     // 確保數據格式正確
-    if (!Array.isArray(data)) {
-        console.error('數據格式錯誤:', data);
-        showErrorMessage('檔案格式錯誤，請確認是正確的 Excel 檔案');
+    if (!Array.isArray(data) || data.length <= 1) {
+        const errorMsg = data.length <= 1 ? '檔案中沒有數據或數據不足' : '檔案格式錯誤';
+        console.error('數據格式錯誤:', { dataLength: data.length, firstFewRows: data.slice(0, 3) });
+        showErrorMessage(`${errorMsg}，請確認是正確的 Excel 檔案`);
         return [];
     }
     
-    // 跳過標題行
+    // 跳過標題行，從第2行開始（索引1）
     for (let i = 1; i < data.length; i++) {
         const row = data[i];
-        // 確保有足夠的欄位（至少4欄：題號、答案、題目、選項）
-        if (!row || row.length < 4) continue;
         
-        const questionNumber = row[0];  // 題號
-        const answer = row[1];          // 答案
-        const questionText = row[2];     // 題目
-        const optionsText = row[3];      // 選項
-        
-        if (!optionsText) continue;
-        
-        // 解析選項，支援多種格式：
-        // 1. (1)選項A (2)選項B (3)選項C (4)選項D
-        // 2. A.選項A B.選項B C.選項C D.選項D
-        let options = [];
-        
-        // 嘗試匹配 (1)選項A 格式
-        const numberPattern = /\(([1-4])\)([^(]+)/g;
-        let match;
-        while ((match = numberPattern.exec(optionsText)) !== null) {
-            const index = parseInt(match[1]) - 1;
-            const optionText = match[2].trim();
-            options[index] = optionText;
+        // 跳過空行或無效行
+        if (!row || !Array.isArray(row) || row.length < 4) {
+            invalidRowCount++;
+            console.warn(`第 ${i + 1} 行數據格式不正確，已跳過`, row);
+            continue;
         }
         
-        // 如果沒有匹配到 (1) 格式，嘗試匹配 A. 格式
-        if (options.length === 0) {
-            const letterPattern = /([A-D])\.\s*([^A-D]+)/g;
-            while ((match = letterPattern.exec(optionsText)) !== null) {
-                const index = match[1].charCodeAt(0) - 65; // A->0, B->1, etc.
-                const optionText = match[2].trim();
-                options[index] = optionText;
+        try {
+            const questionNumber = String(row[0] || '').trim();  // 題號
+            const answer = String(row[1] || '').trim();         // 答案
+            const questionText = String(row[2] || '').trim();    // 題目
+            const optionsText = String(row[3] || '').trim();     // 選項
+            
+            // 驗證必填欄位
+            if (!questionNumber || !answer || !questionText || !optionsText) {
+                console.warn(`第 ${i + 1} 行缺少必要欄位`, { questionNumber, answer, questionText, optionsText });
+                invalidRowCount++;
+                continue;
             }
-        }
-        
-        // 如果成功解析出選項
-        if (options.length > 0) {
-            parsedQuestions.push({
+            
+            // 解析選項，支援多種格式：
+            // 1. (1)選項A (2)選項B (3)選項C (4)選項D
+            // 2. A.選項A B.選項B C.選項C D.選項D
+            // 3. 1.選項A 2.選項B 3.選項C 4.選項D
+            let options = [];
+            let optionPatterns = [
+                // 格式: (1)選項A (2)選項B
+                { 
+                    regex: /\(([1-4])\)\s*([^(]+)/g, 
+                    getIndex: (match) => parseInt(match[1]) - 1 
+                },
+                // 格式: A.選項A B.選項B
+                { 
+                    regex: /([A-D])\.\s*([^A-D]+)/g, 
+                    getIndex: (match) => match[1].charCodeAt(0) - 'A'.charCodeAt(0) 
+                },
+                // 格式: 1.選項A 2.選項B
+                { 
+                    regex: /(\d+)\.\s*([^\d]+)/g, 
+                    getIndex: (match) => parseInt(match[1]) - 1 
+                }
+            ];
+            
+            // 嘗試多種模式匹配選項
+            for (const pattern of optionPatterns) {
+                let match;
+                let hasMatch = false;
+                
+                while ((match = pattern.regex.exec(optionsText)) !== null) {
+                    try {
+                        const index = pattern.getIndex(match);
+                        const optionText = match[2].trim();
+                        
+                        if (index >= 0 && index < 4 && optionText) { // 確保索引在 0-3 範圍內
+                            options[index] = optionText;
+                            hasMatch = true;
+                        }
+                    } catch (e) {
+                        console.warn(`解析選項時出錯 (行 ${i + 1}):`, e);
+                    }
+                }
+                
+                // 如果找到匹配的選項，停止嘗試其他模式
+                if (hasMatch && options.length > 0) {
+                    break;
+                }
+            }
+            
+            // 驗證選項
+            if (options.length < 2) {
+                console.warn(`第 ${i + 1} 題的選項解析失敗或數量不足`, { optionsText, parsedOptions: options });
+                invalidRowCount++;
+                continue;
+            }
+            
+            // 驗證答案是否有效
+            const normalizedAnswer = answer.toUpperCase().trim();
+            const isValidAnswer = /^[A-D1-4]$/.test(normalizedAnswer) && 
+                               (parseInt(normalizedAnswer) <= options.length || 
+                                (normalizedAnswer >= 'A' && normalizedAnswer <= String.fromCharCode('A'.charCodeAt(0) + options.length - 1)));
+            
+            if (!isValidAnswer) {
+                console.warn(`第 ${i + 1} 題的答案無效: ${answer}`, { options });
+                invalidRowCount++;
+                continue;
+            }
+            
+            // 轉換答案為數字索引 (0-3)
+            let answerIndex;
+            if (/^[1-4]$/.test(normalizedAnswer)) {
+                answerIndex = parseInt(normalizedAnswer) - 1;
+            } else {
+                answerIndex = normalizedAnswer.charCodeAt(0) - 'A'.charCodeAt(0);
+            }
+            
+            // 確保答案索引在有效範圍內
+            if (answerIndex < 0 || answerIndex >= options.length) {
+                console.warn(`第 ${i + 1} 題的答案超出範圍: ${answer} (選項數: ${options.length})`);
+                invalidRowCount++;
+                continue;
+            }
+            
+            // 建立題目物件
+            const questionObj = {
+                number: questionNumber,
                 question: questionText,
-                answer: answer,
-                optionA: options[0] || '',
-                optionB: options[1] || '',
-                optionC: options[2] || '',
-                optionD: options[3] || '',
-                originalAnswer: answer,
-                number: questionNumber
-            });
-        } else {
-            // 如果無法解析選項，將整個選項文字作為一個欄位
-            parsedQuestions.push({
-                question: questionText,
-                answer: answer,
-                options: optionsText,
-                originalAnswer: answer,
-                number: questionNumber
-            });
+                options: options.filter(Boolean), // 過濾掉 undefined 的選項
+                answer: answerIndex,
+                explanation: row[4] ? String(row[4]).trim() : '' // 解析說明（如果有的話）
+            };
+            
+            parsedQuestions.push(questionObj);
+            validQuestionCount++;
+            
+        } catch (error) {
+            console.error(`處理第 ${i + 1} 行時發生錯誤:`, error, row);
+            invalidRowCount++;
         }
+    }
+    
+    // 輸出解析結果摘要
+    console.log(`題目解析完成: 成功 ${validQuestionCount} 題，跳過 ${invalidRowCount} 行無效數據`);
+    
+    if (validQuestionCount === 0) {
+        showErrorMessage('無法從檔案中解析出任何有效題目，請確認檔案格式正確');
+    } else if (invalidRowCount > 0) {
+        showWarningMessage(`成功載入 ${validQuestionCount} 題，有 ${invalidRowCount} 行數據因格式不正確被跳過`);
     }
     
     return parsedQuestions;

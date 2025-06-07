@@ -8,24 +8,67 @@ export async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) {
         console.log('沒有選擇檔案');
+        showErrorMessage('請選擇一個檔案');
         return;
     }
     
-    console.log('已選擇檔案:', file.name);
+    // 檢查檔案類型
+    const fileType = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(fileType)) {
+        console.error('不支援的檔案類型:', fileType);
+        showErrorMessage('不支援的檔案類型，請上傳 .xlsx 或 .xls 檔案');
+        return;
+    }
+    
+    console.log('已選擇檔案:', file.name, '大小:', (file.size / 1024).toFixed(2), 'KB');
+    
+    // 顯示載入中訊息
+    const loadingMessage = showLoadingMessage('檔案處理中，請稍候...');
+    
     const reader = new FileReader();
     
     reader.onload = async function(e) {
         try {
+            console.log('開始解析 Excel 檔案...');
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // 嘗試讀取 Excel 檔案
+            let workbook;
+            try {
+                workbook = XLSX.read(data, { type: 'array' });
+            } catch (ex) {
+                console.error('Excel 解析錯誤:', ex);
+                throw new Error('無法解析 Excel 檔案，請確認檔案格式正確且未損壞');
+            }
+            
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                throw new Error('Excel 檔案中沒有工作表');
+            }
+            
+            console.log('找到工作表:', workbook.SheetNames);
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // 將工作表轉換為 JSON 資料
             const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            console.log('解析到', jsonData.length, '行資料');
+            
+            if (jsonData.length <= 1) {
+                throw new Error('Excel 檔案中沒有資料或格式不正確');
+            }
             
             // 解析題目
+            console.log('開始解析題目...');
             const questions = parseQuestions(jsonData);
+            console.log('成功解析', questions.length, '題');
+            
+            if (questions.length === 0) {
+                throw new Error('無法從檔案中解析出任何題目，請確認格式正確');
+            }
             
             // 儲存到 IndexedDB
+            console.log('開始儲存到資料庫...');
             const count = await saveQuestionsToDB(questions);
+            console.log('成功儲存', count, '題到資料庫');
             
             // 更新全局的 questions 變量
             setQuestions(questions);
@@ -40,19 +83,33 @@ export async function handleFileUpload(event) {
             }
         } catch (error) {
             console.error('處理檔案上傳錯誤:', error);
-            showErrorMessage('檔案讀取失敗，請確認格式正確');
+            showErrorMessage(error.message || '檔案處理失敗，請確認格式正確');
+        } finally {
+            // 移除載入中訊息
+            if (loadingMessage && loadingMessage.remove) {
+                loadingMessage.remove();
+            }
         }
     };
     
-    reader.onerror = function() {
-        showErrorMessage('檔案讀取失敗');
+    reader.onerror = function(error) {
+        console.error('檔案讀取錯誤:', error);
+        showErrorMessage(`檔案讀取失敗: ${error.message || '未知錯誤'}`);
+        // 移除載入中訊息
+        if (loadingMessage && loadingMessage.remove) {
+            loadingMessage.remove();
+        }
     };
     
     try {
         reader.readAsArrayBuffer(file);
     } catch (error) {
         console.error('讀取檔案錯誤:', error);
-        showErrorMessage('無法讀取檔案');
+        showErrorMessage(`無法讀取檔案: ${error.message || '未知錯誤'}`);
+        // 移除載入中訊息
+        if (loadingMessage && loadingMessage.remove) {
+            loadingMessage.remove();
+        }
     }
 }
 

@@ -50,6 +50,11 @@ body {
     border-left: 5px solid #c62828;
 }
 
+.notification.warning {
+    background-color: #ff9800;
+    border-left: 5px solid #e65100;
+}
+
 .notification.fade-out {
     animation: fadeOut 0.5s forwards;
 }

@@ -1,5 +1,79 @@
 import { getQuestions } from './questions.js';
 
+// 顯示載入中訊息
+export function showLoadingMessage(message) {
+    // 如果已經有載入訊息，先移除
+    const existingLoading = document.getElementById('loading-message');
+    if (existingLoading) {
+        existingLoading.remove();
+    }
+    
+    // 建立載入訊息元素
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-message';
+    loadingDiv.className = 'notification loading';
+    loadingDiv.style.position = 'fixed';
+    loadingDiv.style.top = '50%';
+    loadingDiv.style.left = '50%';
+    loadingDiv.style.transform = 'translate(-50%, -50%)';
+    loadingDiv.style.zIndex = '2000';
+    loadingDiv.style.padding = '15px 25px';
+    loadingDiv.style.borderRadius = '10px';
+    loadingDiv.style.background = 'rgba(0, 0, 0, 0.8)';
+    loadingDiv.style.color = 'white';
+    loadingDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    loadingDiv.style.display = 'flex';
+    loadingDiv.style.alignItems = 'center';
+    loadingDiv.style.gap = '10px';
+    
+    // 加入載入動畫
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+    spinner.style.width = '20px';
+    spinner.style.height = '20px';
+    spinner.style.border = '3px solid rgba(255, 255, 255, 0.3)';
+    spinner.style.borderRadius = '50%';
+    spinner.style.borderTopColor = 'white';
+    spinner.style.animation = 'spin 1s ease-in-out infinite';
+    
+    // 加入文字
+    const text = document.createElement('span');
+    text.textContent = message || '處理中...';
+    
+    loadingDiv.appendChild(spinner);
+    loadingDiv.appendChild(text);
+    document.body.appendChild(loadingDiv);
+    
+    // 加入動畫樣式（如果尚未加入）
+    if (!document.getElementById('loading-styles')) {
+        const style = document.createElement('style');
+        style.id = 'loading-styles';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            
+            .fade-out {
+                opacity: 0;
+                transition: opacity 0.5s ease-out;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // 添加移除方法
+    loadingDiv.remove = function() {
+        this.classList.add('fade-out');
+        setTimeout(() => {
+            if (this.parentNode) {
+                this.parentNode.removeChild(this);
+            }
+        }, 500);
+    };
+    
+    return loadingDiv;
+}
+
 // 顯示滑動提示
 export function showSwipeHint() {
     setTimeout(() => {
@@ -34,13 +108,31 @@ export function showSuccessMessage(message) {
 // 顯示錯誤訊息
 export function showErrorMessage(message) {
     console.error('錯誤:', message);
-    // 顯示錯誤通知
+    // 顯示通知
     const notification = document.createElement('div');
     notification.className = 'notification error';
     notification.textContent = message;
     document.body.appendChild(notification);
     
-    // 5 秒後自動消失
+    // 3 秒後自動消失
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 3000);
+}
+
+// 顯示警告訊息
+export function showWarningMessage(message) {
+    console.warn('警告:', message);
+    // 顯示通知
+    const notification = document.createElement('div');
+    notification.className = 'notification warning';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // 5 秒後自動消失（警告訊息顯示時間稍長）
     setTimeout(() => {
         notification.classList.add('fade-out');
         setTimeout(() => {
