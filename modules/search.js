@@ -34,7 +34,7 @@ function highlightText(text, term) {
 }
 
 // 顯示搜尋結果
-function showSearchResults(results, searchTerm) {
+function showSearchResults(searchResults, searchTerm) {
     try {
         // 建立新視窗
         const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
@@ -120,7 +120,7 @@ function showSearchResults(results, searchTerm) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${results.map(q => {
+                    ${searchResults.map(q => {
                         const safeQuestion = escapeHtml(q.question || '');
                         return `
                         <tr>

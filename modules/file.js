@@ -6,6 +6,8 @@ import { showSuccessMessage, showErrorMessage, updateQuestionCount, showLoadingM
 export async function handleFileUpload(event) {
     console.log('開始處理檔案上傳...');
     const file = event.target.files[0];
+    let loadingMessage = null;  // 在函數頂部聲明 loadingMessage
+    
     if (!file) {
         console.log('沒有選擇檔案');
         showErrorMessage('請選擇一個檔案');
@@ -23,7 +25,7 @@ export async function handleFileUpload(event) {
     console.log('已選擇檔案:', file.name, '大小:', (file.size / 1024).toFixed(2), 'KB');
     
     // 顯示載入中訊息
-    const loadingMessage = showLoadingMessage('檔案處理中，請稍候...');
+    loadingMessage = showLoadingMessage('檔案處理中，請稍候...');
     
     const reader = new FileReader();
     
@@ -105,8 +107,9 @@ export async function handleFileUpload(event) {
             showErrorMessage(error.message || '檔案處理失敗，請確認格式正確');
         } finally {
             // 移除載入中訊息
-            if (loadingMessage && loadingMessage.remove) {
+            if (loadingMessage && typeof loadingMessage.remove === 'function') {
                 loadingMessage.remove();
+                loadingMessage = null;
             }
         }
     };
@@ -115,8 +118,9 @@ export async function handleFileUpload(event) {
         console.error('檔案讀取錯誤:', error);
         showErrorMessage(`檔案讀取失敗: ${error.message || '未知錯誤'}`);
         // 移除載入中訊息
-        if (loadingMessage && loadingMessage.remove) {
+        if (loadingMessage && typeof loadingMessage.remove === 'function') {
             loadingMessage.remove();
+            loadingMessage = null;
         }
     };
     

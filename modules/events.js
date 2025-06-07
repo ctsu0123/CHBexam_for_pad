@@ -4,7 +4,7 @@ import { handleSearch } from './search.js';
 import { navigateQuestion } from './navigation.js';
 
 // 應用程式狀態
-let currentMode = '';
+let appCurrentMode = '';
 
 // 設定事件監聽器
 export function setupEventListeners() {
@@ -17,7 +17,7 @@ export function setupEventListeners() {
     // 模式選擇
     document.querySelectorAll('input[name="quizMode"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            currentMode = this.value;
+            appCurrentMode = this.value;
             const randomSettings = document.getElementById('randomSettings');
             if (randomSettings) {
                 randomSettings.style.display = this.value === 'random' ? 'block' : 'none';

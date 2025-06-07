@@ -3,7 +3,8 @@ const DB_NAME = 'QuizAppDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'questions';
 
-let db = null;
+// 使用更具描述性的變數名
+let database = null;
 
 // 開啟或建立資料庫
 export function openDB() {
@@ -18,13 +19,14 @@ export function openDB() {
         };
         
         request.onsuccess = (event) => {
-            db = event.target.result;
-            resolve(db);
+            database = event.target.result;
+            resolve(database);
         };
         
         request.onupgradeneeded = (event) => {
             console.log('資料庫需要升級或初始化');
             const db = event.target.result;
+            database = db;
             
             // 如果物件儲存空間已存在，先刪除
             if (db.objectStoreNames.contains(STORE_NAME)) {
@@ -174,26 +176,34 @@ export async function saveQuestionsToDB(questions) {
 
 // 從資料庫載入題目
 export async function loadQuestionsFromDB() {
-    if (!db) await openDB();
+    if (!database) await openDB();
     
-    return new Promise((resolve) => {
-        const transaction = db.transaction([STORE_NAME], 'readonly');
+    return new Promise((resolve, reject) => {
+        if (!database) {
+            console.error('資料庫未初始化');
+            reject('資料庫未初始化');
+            return;
+        }
+
+        const transaction = database.transaction([STORE_NAME], 'readonly');
         const store = transaction.objectStore(STORE_NAME);
         const request = store.getAll();
-        
+
         request.onsuccess = () => {
-            resolve(request.result || []);
+            console.log('成功從資料庫載入', request.result.length, '題');
+            resolve(request.result);
         };
-        
+
         request.onerror = (event) => {
-            console.error('載入題目失敗', event);
-            resolve([]);
+            console.error('載入資料庫時發生錯誤:', event.target.error);
+            reject('載入資料庫時發生錯誤');
         };
     });
 }
 
 // 清除資料庫
 export async function clearDB() {
+    if (!database) await openDB();
     if (!db) await openDB();
     
     return new Promise((resolve, reject) => {

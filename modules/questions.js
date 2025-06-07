@@ -30,14 +30,14 @@ export function parseQuestions(data) {
     
     // 找出各欄位的索引
     const numberIndex = headers.findIndex(h => h.includes('題號') || h.includes('number'));
-    const answerIndex = headers.findIndex(h => h.includes('答案') || h.includes('answer'));
+    const answerColIndex = headers.findIndex(h => h.includes('答案') || h.includes('answer'));
     const questionIndex = headers.findIndex(h => h.includes('題目') || h.includes('question'));
     const optionsIndex = headers.findIndex(h => h.includes('選項') || h.includes('options'));
     
-    console.log('欄位索引:', { numberIndex, answerIndex, questionIndex, optionsIndex });
+    console.log('欄位索引:', { numberIndex, answerColIndex, questionIndex, optionsIndex });
     
     // 檢查必要欄位是否存在
-    if (numberIndex === -1 || answerIndex === -1 || questionIndex === -1 || optionsIndex === -1) {
+    if (numberIndex === -1 || answerColIndex === -1 || questionIndex === -1 || optionsIndex === -1) {
         const missingFields = [];
         if (numberIndex === -1) missingFields.push('題號');
         if (answerIndex === -1) missingFields.push('答案');
@@ -63,9 +63,9 @@ export function parseQuestions(data) {
         
         try {
             const questionNumber = String(row[numberIndex] || '').trim();  // 題號
-            const answer = String(row[answerIndex] || '').trim();         // 答案
-            const questionText = String(row[questionIndex] || '').trim(); // 題目
-            const optionsText = String(row[optionsIndex] || '').trim();   // 選項
+            const answer = String(row[answerColIndex] || '').trim();       // 答案
+            const questionText = String(row[questionIndex] || '').trim();  // 題目
+            const optionsText = String(row[optionsIndex] || '').trim();    // 選項
             
             // 驗證必填欄位
             if (!questionNumber || !answer || !questionText || !optionsText) {
@@ -97,28 +97,36 @@ export function parseQuestions(data) {
                 }
             ];
             
-            // 嘗試多種模式匹配選項
-            for (const pattern of optionPatterns) {
-                let match;
-                let hasMatch = false;
-                
-                while ((match = pattern.regex.exec(optionsText)) !== null) {
-                    try {
-                        const index = pattern.getIndex(match);
-                        const optionText = match[2].trim();
-                        
-                        if (index >= 0 && index < 4 && optionText) { // 確保索引在 0-3 範圍內
-                            options[index] = optionText;
-                            hasMatch = true;
+            // 如果還沒有解析出選項，嘗試使用正則表達式匹配
+            if (options.length === 0) {
+                for (const pattern of optionPatterns) {
+                    const matches = [];
+                    let match;
+                    
+                    // 重置正則表達式的 lastIndex
+                    pattern.regex.lastIndex = 0;
+                    
+                    while ((match = pattern.regex.exec(optionsText)) !== null) {
+                        try {
+                            const index = pattern.getIndex(match);
+                            // 使用 match[2] 或 match[3] 取決於正則表達式的分組
+                            const optionText = (match[2] || match[3] || '').trim();
+                            
+                            if (index >= 0 && index < 4 && optionText) {
+                                matches[index] = pattern.cleanValue ? pattern.cleanValue(optionText) : optionText;
+                            }
+                        } catch (e) {
+                            console.warn(`解析選項時出錯 (行 ${i + 1}):`, e);
                         }
-                    } catch (e) {
-                        console.warn(`解析選項時出錯 (行 ${i + 1}):`, e);
                     }
-                }
-                
-                // 如果找到匹配的選項，停止嘗試其他模式
-                if (hasMatch && options.length > 0) {
-                    break;
+                    
+                    // 檢查是否成功解析出至少2個選項
+                    const validOptions = matches.filter(Boolean);
+                    if (validOptions.length >= 2) {
+                        options = matches;
+                        console.log(`使用模式 ${pattern.regex} 成功解析選項:`, options);
+                        break;
+                    }
                 }
             }
             
