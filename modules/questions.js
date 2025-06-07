@@ -328,68 +328,6 @@ export function setFilteredQuestions(questions) {
 }
 
 // 開始測驗
-// 顯示當前題目
-export function displayQuestion() {
-    try {
-        const question = filteredQuestions[currentQuestionIndex];
-        if (!question) {
-            console.error('找不到當前題目，索引:', currentQuestionIndex);
-            return false;
-        }
-
-        // 更新題號顯示
-        const questionNumberElement = document.getElementById('questionNumber');
-        if (questionNumberElement) {
-            questionNumberElement.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${filteredQuestions.length} 題`;
-        }
-
-        // 更新題目內容
-        const questionTextElement = document.getElementById('questionText');
-        if (questionTextElement) {
-            questionTextElement.textContent = question.question || '無題目內容';
-        }
-
-        // 更新選項
-        const optionsContainer = document.getElementById('optionsContainer');
-        if (optionsContainer) {
-            optionsContainer.innerHTML = ''; // 清空現有選項
-            
-            question.options.forEach((option, index) => {
-                const optionElement = document.createElement('div');
-                optionElement.className = 'option';
-                optionElement.innerHTML = `
-                    <input type="radio" name="answer" id="option${index}" value="${String.fromCharCode(65 + index)}">
-                    <label for="option${index}">${String.fromCharCode(65 + index)}. ${option || '無選項內容'}</label>
-                `;
-                optionsContainer.appendChild(optionElement);
-            });
-        }
-
-        // 更新導航按鈕狀態
-        updateNavigationButtons();
-        
-        return true;
-    } catch (error) {
-        console.error('顯示題目時發生錯誤:', error);
-        showErrorMessage('顯示題目時發生錯誤: ' + error.message);
-        return false;
-    }
-}
-
-// 更新導航按鈕狀態
-export function updateNavigationButtons() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    
-    if (prevBtn) {
-        prevBtn.disabled = currentQuestionIndex <= 0;
-    }
-    
-    if (nextBtn) {
-        nextBtn.disabled = currentQuestionIndex >= filteredQuestions.length - 1;
-    }
-}
-
 export function startQuiz(mode, count = 10) {
     console.log('開始測驗，模式:', mode, '題數:', count);
     
