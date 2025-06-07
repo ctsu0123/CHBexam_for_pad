@@ -49,11 +49,30 @@ export async function handleFileUpload(event) {
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             
             // 將工作表轉換為 JSON 資料
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
             console.log('解析到', jsonData.length, '行資料');
             
+            // 輸出前幾行數據用於調試
+            console.log('前5行數據:', JSON.stringify(jsonData.slice(0, Math.min(5, jsonData.length)), null, 2));
+            
             if (jsonData.length <= 1) {
+                console.error('Excel 檔案中沒有足夠的資料行:', jsonData);
                 throw new Error('Excel 檔案中沒有資料或格式不正確');
+            }
+            
+            // 檢查標題行
+            const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
+            console.log('標題行:', headers);
+            
+            // 檢查必要欄位
+            const requiredFields = ['題號', '答案', '題目', '選項'];
+            const missingFields = requiredFields.filter(field => 
+                !headers.some(h => h.includes(field))
+            );
+            
+            if (missingFields.length > 0) {
+                console.error('缺少必要欄位:', missingFields);
+                throw new Error(`Excel 缺少必要欄位: ${missingFields.join(', ')}`);
             }
             
             // 解析題目
