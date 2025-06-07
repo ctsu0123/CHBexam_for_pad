@@ -158,91 +158,50 @@ export function parseQuestions(data) {
                 continue;
             }
             
-            // 解析選項，支援多種格式：
-            // 1. (1)選項A (2)選項B (3)選項C (4)選項D
-            // 2. A.選項A B.選項B C.選項C D.選項D
-            // 3. 1.選項A 2.選項B 3.選項C 4.選項D
-            // 4. 換行格式的選項
+            // 簡化選項解析，直接使用 (1) (2) (3) (4) 作為選項
             let options = [];
+            const optionMatches = optionsText.matchAll(/\(\s*(\d)\s*\)\s*([^\r\n()]+)/g);
             
-            // 首先嘗試處理換行格式的選項
-            const lines = optionsText.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length >= 4) {
-                const lineBasedOptions = [];
-                let isValid = true;
-                
-                for (const line of lines) {
-                    // 匹配 (1) 選項A 或 1. 選項A 或 1) 選項A 等格式
-                    const match = line.match(/^\s*[\(（]?\s*(\d)\s*[\).、]\s*([^\r\n]+)/);
-                    if (match) {
-                        const index = parseInt(match[1]) - 1;
-                        const text = match[2].trim();
-                        if (index >= 0 && index < 4) {
-                            lineBasedOptions[index] = text;
-                        } else {
-                            isValid = false;
-                            break;
-                        }
-                    } else {
-                        isValid = false;
-                        break;
-                    }
-                }
-                
-                if (isValid && lineBasedOptions.filter(Boolean).length >= 2) {
-                    options = lineBasedOptions;
+            for (const match of optionMatches) {
+                const index = parseInt(match[1]) - 1; // 轉換為 0-based 索引
+                const text = match[2].trim();
+                if (index >= 0 && index < 4 && text) {
+                    options[index] = text;
                 }
             }
             
-            // 如果換行解析失敗，嘗試其他模式
-            if (options.length === 0) {
-                const optionPatterns = [
+            // 如果沒有找到 (1) (2) 格式的選項，嘗試其他常見格式
+            if (options.filter(Boolean).length < 2) {
+                const altOptionPatterns = [
                     { 
-                        // 匹配 (1) 選項A 格式
-                        regex: /[\(（]\s*(\d)\s*[\）)]\s*([^\r\n]+)/g, 
+                        // 匹配 1. 選項A 格式
+                        regex: /(\d+)[\.、]\s*([^\r\n]+)/g,
                         getIndex: (match) => parseInt(match[1]) - 1,
-                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
+                        cleanValue: (val) => val.trim()
                     },
                     { 
                         // 匹配 A. 選項A 格式
-                        regex: /([A-D])\.\s*([^A-D\n]+)/g, 
+                        regex: /([A-D])[\.、]\s*([^\r\n]+)/g,
                         getIndex: (match) => match[1].charCodeAt(0) - 'A'.charCodeAt(0),
-                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
-                    },
-                    { 
-                        // 匹配 1. 選項A 格式
-                        regex: /(\d+)\.\s*([^\d\n]+)/g, 
-                        getIndex: (match) => parseInt(match[1]) - 1,
-                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
+                        cleanValue: (val) => val.trim()
                     }
                 ];
                 
-                for (const pattern of optionPatterns) {
+                for (const pattern of altOptionPatterns) {
                     const matches = [];
                     let match;
-                    
-                    // 重置正則表達式的 lastIndex
                     pattern.regex.lastIndex = 0;
                     
                     while ((match = pattern.regex.exec(optionsText)) !== null) {
-                        try {
-                            const index = pattern.getIndex(match);
-                            // 使用 match[2] 或 match[3] 取決於正則表達式的分組
-                            const optionText = (match[2] || match[3] || '').trim();
-                            
-                            if (index >= 0 && index < 4 && optionText) {
-                                matches[index] = pattern.cleanValue ? pattern.cleanValue(optionText) : optionText;
-                            }
-                        } catch (e) {
-                            console.warn(`解析選項時出錯 (行 ${i + 1}):`, e);
+                        const index = pattern.getIndex(match);
+                        const optionText = (match[2] || '').trim();
+                        if (index >= 0 && index < 4 && optionText) {
+                            matches[index] = pattern.cleanValue ? pattern.cleanValue(optionText) : optionText;
                         }
                     }
                     
-                    // 檢查是否成功解析出至少2個選項
-                    const validOptions = matches.filter(Boolean);
-                    if (validOptions.length >= 2) {
+                    if (matches.filter(Boolean).length >= 2) {
                         options = matches;
-                        console.log(`使用模式 ${pattern.regex} 成功解析選項:`, options);
                         break;
                     }
                 }
@@ -255,25 +214,18 @@ export function parseQuestions(data) {
                 continue;
             }
             
-            // 驗證答案是否有效
-            const normalizedAnswer = answer.toUpperCase().trim();
-            const isValidAnswer = /^[A-D1-4]$/.test(normalizedAnswer) && 
-                               (parseInt(normalizedAnswer) <= options.length || 
-                                (normalizedAnswer >= 'A' && normalizedAnswer <= String.fromCharCode('A'.charCodeAt(0) + options.length - 1)));
+            // 驗證答案是否有效 (1-4 的數字)
+            const normalizedAnswer = answer.toString().trim();
+            const isValidAnswer = /^[1-4]$/.test(normalizedAnswer);
             
             if (!isValidAnswer) {
-                console.warn(`第 ${i + 1} 題的答案無效: ${answer}`, { options });
+                console.warn(`第 ${i + 1} 題的答案無效: ${answer}，必須是 1-4 的數字`, { options });
                 invalidRowCount++;
                 continue;
             }
             
             // 轉換答案為數字索引 (0-3)
-            let answerIndex;
-            if (/^[1-4]$/.test(normalizedAnswer)) {
-                answerIndex = parseInt(normalizedAnswer) - 1;
-            } else {
-                answerIndex = normalizedAnswer.charCodeAt(0) - 'A'.charCodeAt(0);
-            }
+            const answerIndex = parseInt(normalizedAnswer) - 1;
             
             // 確保答案索引在有效範圍內
             if (answerIndex < 0 || answerIndex >= options.length) {
