@@ -64,8 +64,8 @@ export function setupEventListeners() {
     }
 }
 
-// 從 questions.js 導入 startQuiz 函數
-import { startQuiz } from './questions.js';
+// 從 questions.js 導入函數
+import { startQuiz, displayQuestion } from './questions.js';
 
 // 開始測驗的事件處理函數
 function handleStartQuiz() {
@@ -78,6 +78,8 @@ function handleStartQuiz() {
     const success = startQuiz(appCurrentMode, 10); // 預設 10 題
     if (success) {
         console.log('開始測驗，模式:', appCurrentMode);
+        // 顯示第一題
+        displayQuestion();
     }
 }
 
