@@ -204,20 +204,25 @@ export async function loadQuestionsFromDB() {
 // 清除資料庫
 export async function clearDB() {
     if (!database) await openDB();
-    if (!db) await openDB();
     
     return new Promise((resolve, reject) => {
-        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        if (!database) {
+            reject('資料庫未初始化');
+            return;
+        }
+        
+        const transaction = database.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         const request = store.clear();
         
         request.onsuccess = () => {
+            console.log('資料庫已清空');
             resolve();
         };
         
         request.onerror = (event) => {
-            console.error('清除資料庫失敗', event);
-            reject('清除資料庫失敗');
+            console.error('清空資料庫失敗', event);
+            reject('清空資料庫失敗');
         };
     });
 }
