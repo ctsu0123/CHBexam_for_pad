@@ -1,5 +1,5 @@
 // 導入 UI 函數
-import { showErrorMessage, showWarningMessage } from './ui.js';
+import { showErrorMessage, showWarningMessage, displayQuestion as uiDisplayQuestion } from './ui.js';
 
 // 題目相關的狀態
 let questions = [];
@@ -30,63 +30,21 @@ function updateNavigationButtons() {
 // 顯示當前題目
 export function displayQuestion() {
     try {
-        const question = filteredQuestions[currentQuestionIndex];
-        if (!question) {
-            console.error('找不到當前題目，索引:', currentQuestionIndex);
+        const currentIndex = getCurrentQuestionIndex();
+        const questions = getFilteredQuestions();
+        const currentQuestion = questions[currentIndex];
+        
+        if (!currentQuestion) {
+            console.error('找不到當前題目，索引:', currentIndex);
             return false;
         }
-
-        // 更新題號顯示
-        const questionNumberElement = document.getElementById('questionNumber');
-        if (questionNumberElement) {
-            questionNumberElement.textContent = `第 ${currentQuestionIndex + 1} 題 / 共 ${filteredQuestions.length} 題`;
-        }
-
-        // 更新題目內容
-        const questionTextElement = document.getElementById('questionText');
-        if (questionTextElement) {
-            questionTextElement.textContent = question.question || '無題目內容';
-        }
-
-        // 更新選項
-        const optionsContainer = document.getElementById('options');
-        if (optionsContainer) {
-            optionsContainer.innerHTML = ''; // 清空現有選項
-            
-            question.options.forEach((option, index) => {
-                if (option) {  // 只處理有值的選項
-                    const optionElement = document.createElement('div');
-                    optionElement.className = 'option';
-                    const optionNumber = index + 1; // 轉換為 1-based 索引
-                    optionElement.innerHTML = `
-                        <input type="radio" name="answer" id="option${index}" value="${optionNumber}">
-                        <label for="option${index}">(${optionNumber}) ${option}</label>
-                    `;
-                    optionsContainer.appendChild(optionElement);
-                    
-                    console.log(`選項 (${optionNumber}):`, option);
-                }
-            });
-            
-            // 顯示題目區域
-            const questionDisplay = document.getElementById('questionDisplay');
-            if (questionDisplay) {
-                questionDisplay.style.display = 'block';
-            }
-            
-            // 顯示導航按鈕
-            const navigation = document.getElementById('navigation');
-            if (navigation) {
-                navigation.style.display = 'flex';
-            }
-        } else {
-            console.error('找不到選項容器 (ID: options)');
-        }
-
-        // 更新導航按鈕狀態
-        updateNavigationButtons();
         
-        return true;
+        // 獲取當前模式
+        const mode = document.querySelector('input[name="quizMode"]:checked')?.value || 'browse-with-answer';
+        console.log('Displaying question in mode:', mode, 'Question index:', currentIndex);
+        
+        // 調用 ui.js 中的 displayQuestion 函數
+        return uiDisplayQuestion(currentQuestion, currentIndex, questions.length, mode);
     } catch (error) {
         console.error('顯示題目時發生錯誤:', error);
         showErrorMessage('顯示題目時發生錯誤: ' + error.message);
@@ -312,14 +270,18 @@ export function startQuiz(mode, count = 10) {
 
     try {
         // 準備題目列表
+        let tempFilteredQuestions;
         if (mode === 'random') {
             console.log('隨機選擇', count, '題');
             const shuffled = [...questions].sort(() => Math.random() - 0.5);
-            filteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+            tempFilteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
         } else {
             console.log('使用全部題目，共', questions.length, '題');
-            filteredQuestions = [...questions];
+            tempFilteredQuestions = [...questions];
         }
+        
+        // 設置過濾後的題目
+        setFilteredQuestions(tempFilteredQuestions);
 
         currentQuestionIndex = 0;
         

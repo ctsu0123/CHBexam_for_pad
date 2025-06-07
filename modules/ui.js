@@ -263,12 +263,13 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
         if (mode === 'browse-with-answer') {
             // 使用原始答案值
             const correctAnswer = question.originalAnswer || '';
+            const answerText = correctAnswer ? correctAnswer.toString() : '';
             
-            console.log('Original answer:', correctAnswer, 'Options:', question.options);
+            console.log('Original answer:', answerText, 'Options:', question.options);
             
             // 顯示正確答案
             answerDisplay.style.display = 'block';
-            answerDisplay.textContent = `正確答案：${correctAnswer}`;
+            answerDisplay.textContent = `正確答案：${answerText}`;
             
             // 標記正確答案
             const options = document.querySelectorAll('.option');
@@ -290,6 +291,43 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
             });
         } else {
             answerDisplay.style.display = 'none';
+        }
+    }
+    
+    // 如果是含答案模式，確保正確答案被標記
+    if (mode === 'browse-with-answer') {
+        const correctAnswer = question.originalAnswer || '';
+        console.log('Final check - Original answer:', correctAnswer);
+        
+        if (correctAnswer) {
+            // 使用 setTimeout 確保 DOM 已經更新
+            setTimeout(() => {
+                console.log('Starting re-marking process for answer:', correctAnswer);
+                const options = document.querySelectorAll('.option');
+                let found = false;
+                
+                options.forEach((opt) => {
+                    const input = opt.querySelector('input[type="radio"]');
+                    if (input) {
+                        console.log('Checking option value:', input.value, 'vs correct:', correctAnswer);
+                        // 清除之前的高亮
+                        opt.classList.remove('correct');
+                        
+                        // 檢查選項值是否等於正確答案
+                        if (input.value === correctAnswer.toString()) {
+                            opt.classList.add('correct');
+                            found = true;
+                            console.log('Re-marked correct answer:', correctAnswer);
+                        }
+                    }
+                });
+                
+                if (!found) {
+                    console.warn('Could not find matching option for answer:', correctAnswer);
+                }
+            }, 100); // 稍微增加延遲確保 DOM 已完全更新
+        } else {
+            console.warn('No correct answer found for question:', question.number);
         }
     }
     
