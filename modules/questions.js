@@ -369,16 +369,34 @@ export function startQuiz(mode, count = 10) {
 
         currentQuestionIndex = 0;
         
-        // 顯示第一題
-        if (filteredQuestions.length > 0) {
-            console.log('顯示第 1 題，共', filteredQuestions.length, '題');
-            displayQuestion();
-            return true;
-        } else {
+        // 驗證題目是否成功準備
+        if (filteredQuestions.length === 0) {
             console.warn('沒有可用的題目');
             showWarningMessage('沒有可用的題目，請檢查題庫');
             return false;
         }
+
+        // 顯示題目區域
+        const questionDisplay = document.getElementById('questionDisplay');
+        if (questionDisplay) {
+            questionDisplay.style.display = 'block';
+        }
+
+        // 顯示導航按鈕
+        const navigation = document.getElementById('navigation');
+        if (navigation) {
+            navigation.style.display = 'flex';
+        }
+
+        // 顯示第一題
+        console.log('顯示第 1 題，共', filteredQuestions.length, '題');
+        const success = displayQuestion();
+        if (!success) {
+            console.error('顯示第一題失敗');
+            return false;
+        }
+
+        return true;
     } catch (error) {
         console.error('開始測驗時發生錯誤:', error);
         showErrorMessage('開始測驗時發生錯誤: ' + error.message);
