@@ -1,3 +1,5 @@
+import { getQuestions } from './questions.js';
+
 // 顯示滑動提示
 export function showSwipeHint() {
     setTimeout(() => {
@@ -14,13 +16,37 @@ export function showSwipeHint() {
 // 顯示成功訊息
 export function showSuccessMessage(message) {
     console.log('成功:', message);
-    // 這裡可以添加顯示成功訊息的 UI 邏輯
+    // 顯示通知
+    const notification = document.createElement('div');
+    notification.className = 'notification success';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // 3 秒後自動消失
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 3000);
 }
 
 // 顯示錯誤訊息
 export function showErrorMessage(message) {
     console.error('錯誤:', message);
-    // 這裡可以添加顯示錯誤訊息的 UI 邏輯
+    // 顯示錯誤通知
+    const notification = document.createElement('div');
+    notification.className = 'notification error';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // 5 秒後自動消失
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 5000);
 }
 
 // 更新題數顯示
@@ -29,8 +55,25 @@ export function updateQuestionCount(count) {
     if (countElement) {
         countElement.textContent = `已載入 ${count} 題`;
         countElement.style.display = 'block';
+        
+        // 啟用開始測驗按鈕
+        const startBtn = document.getElementById('startQuizBtn');
+        if (startBtn) {
+            startBtn.disabled = false;
+        }
     }
 }
+
+// 監聽題目更新事件
+document.addEventListener('questionsUpdated', () => {
+    const questions = getQuestions();
+    updateQuestionCount(questions.length);
+    
+    // 如果有題目，顯示第一題
+    if (questions.length > 0) {
+        displayQuestion(questions[0], 0, questions.length, 'browse-with-answer');
+    }
+});
 
 // 更新導航按鈕狀態
 export function updateNavigation(currentIndex, totalCount) {

@@ -6,6 +6,9 @@ let questions = [];
 let currentQuestionIndex = 0;
 let filteredQuestions = [];
 
+// 自定義事件
+const questionUpdatedEvent = new Event('questionsUpdated');
+
 // 解析題目
 export function parseQuestions(data) {
     const parsedQuestions = [];
@@ -90,6 +93,8 @@ export function getQuestions() {
 export function setQuestions(newQuestions) {
     questions = newQuestions;
     filteredQuestions = [...newQuestions];
+    // 觸發自定義事件
+    document.dispatchEvent(questionUpdatedEvent);
 }
 
 // 獲取當前題目索引
