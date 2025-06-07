@@ -79,7 +79,12 @@ function handleStartQuiz() {
     if (success) {
         console.log('開始測驗，模式:', appCurrentMode);
         // 顯示第一題
-        displayQuestion();
+        if (typeof displayQuestion === 'function') {
+            displayQuestion();
+        } else {
+            console.error('displayQuestion 函數未定義');
+            showErrorMessage('顯示題目時發生錯誤: displayQuestion 函數未定義');
+        }
     }
 }
 

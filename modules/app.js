@@ -1,7 +1,8 @@
 // 導入其他模組
 import { setupEventListeners } from './events.js';
 import { showSwipeHint } from './ui.js';
-import './questions.js'; // 確保 questions.js 被載入
+import { displayQuestion } from './questions.js'; // 導入 displayQuestion 函數
+import './questions.js'; // 確保所有函數被載入
 
 function initializeApp() {
     console.log('應用程式初始化...');
