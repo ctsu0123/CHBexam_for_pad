@@ -49,19 +49,37 @@ export function displayQuestion() {
         }
 
         // 更新選項
-        const optionsContainer = document.getElementById('optionsContainer');
+        const optionsContainer = document.getElementById('options');
         if (optionsContainer) {
             optionsContainer.innerHTML = ''; // 清空現有選項
             
             question.options.forEach((option, index) => {
-                const optionElement = document.createElement('div');
-                optionElement.className = 'option';
-                optionElement.innerHTML = `
-                    <input type="radio" name="answer" id="option${index}" value="${String.fromCharCode(65 + index)}">
-                    <label for="option${index}">${String.fromCharCode(65 + index)}. ${option || '無選項內容'}</label>
-                `;
-                optionsContainer.appendChild(optionElement);
+                if (option) {  // 只處理有值的選項
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.innerHTML = `
+                        <input type="radio" name="answer" id="option${index}" value="${String.fromCharCode(65 + index)}">
+                        <label for="option${index}">${String.fromCharCode(65 + index)}. ${option}</label>
+                    `;
+                    optionsContainer.appendChild(optionElement);
+                    
+                    console.log(`選項 ${String.fromCharCode(65 + index)}:`, option);
+                }
             });
+            
+            // 顯示題目區域
+            const questionDisplay = document.getElementById('questionDisplay');
+            if (questionDisplay) {
+                questionDisplay.style.display = 'block';
+            }
+            
+            // 顯示導航按鈕
+            const navigation = document.getElementById('navigation');
+            if (navigation) {
+                navigation.style.display = 'flex';
+            }
+        } else {
+            console.error('找不到選項容器 (ID: options)');
         }
 
         // 更新導航按鈕狀態
