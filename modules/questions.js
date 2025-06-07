@@ -263,7 +263,7 @@ export function setFilteredQuestions(questions) {
 
 // 開始測驗
 // 顯示當前題目
-function displayQuestion() {
+export function displayQuestion() {
     try {
         const question = filteredQuestions[currentQuestionIndex];
         if (!question) {
@@ -311,7 +311,7 @@ function displayQuestion() {
 }
 
 // 更新導航按鈕狀態
-function updateNavigationButtons() {
+export function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     
