@@ -241,6 +241,7 @@ export function parseQuestions(data) {
                 question: questionText,
                 options: options.filter(Boolean), // 過濾掉 undefined 的選項
                 answer: answerIndex,
+                originalAnswer: normalizedAnswer, // 保存原始答案值
                 explanation: row[4] ? String(row[4]).trim() : '' // 解析說明（如果有的話）
             };
             

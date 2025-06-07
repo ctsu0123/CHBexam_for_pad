@@ -225,37 +225,69 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
         
-        // 使用 1-4 作為選項標籤
-        const options = ['1', '2', '3', '4'];
-        options.forEach(opt => {
-            const optionText = question[`option${opt}`];
+        // 使用 question.options 數組來顯示選項
+        question.options.forEach((optionText, index) => {
             if (optionText) {
+                const optionNumber = index + 1; // 轉換為 1-based 數字
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'option';
-                // 顯示為 (1) 選項內容 格式
-                optionDiv.textContent = `(${opt}) ${optionText}`;
-                optionDiv.addEventListener('click', () => showAnswer(opt, question, mode));
                 
-                // 直接使用數字答案進行比較
-                const correctAnswer = question.originalAnswer;
+                // 創建單選按鈕
+                const radioId = `option${index}`;
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'answer';
+                radio.id = radioId;
+                radio.value = optionNumber.toString();
                 
-                // 如果是含答案模式，直接標示正確答案
-                if (mode === 'browse-with-answer' && opt === correctAnswer) {
-                    optionDiv.classList.add('correct');
-                }
+                // 創建標籤
+                const label = document.createElement('label');
+                label.htmlFor = radioId;
+                label.textContent = `(${optionNumber}) ${optionText}`;
                 
+                // 添加點擊事件
+                optionDiv.addEventListener('click', () => showAnswer(optionNumber.toString(), question, mode));
+                
+                // 添加元素到 DOM
+                optionDiv.appendChild(radio);
+                optionDiv.appendChild(label);
                 optionsContainer.appendChild(optionDiv);
             }
         });
     }
     
     // 顯示答案（含答案模式）
+    console.log('Current question:', question);
     const answerDisplay = document.getElementById('answerDisplay');
     if (answerDisplay) {
         if (mode === 'browse-with-answer') {
-            const displayAnswer = question.originalAnswer || '';
+            // 使用原始答案值
+            const correctAnswer = question.originalAnswer || '';
+            
+            console.log('Original answer:', correctAnswer, 'Options:', question.options);
+            
+            // 顯示正確答案
             answerDisplay.style.display = 'block';
-            answerDisplay.textContent = `正確答案：(${displayAnswer})`;
+            answerDisplay.textContent = `正確答案：${correctAnswer}`;
+            
+            // 標記正確答案
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt) => {
+                const input = opt.querySelector('input[type="radio"]');
+                if (input) {
+                    const optValue = input.value; // 獲取選項值（1,2,3,4）
+                    console.log('Checking option:', optValue, 'vs correct:', correctAnswer);
+                    
+                    // 清除之前的高亮
+                    opt.classList.remove('correct');
+                    
+                    // 檢查選項值是否等於正確答案
+                    if (optValue === correctAnswer) {
+                        opt.classList.add('correct');
+                        console.log('Marking option as correct:', optValue);
+                    }
+                }
+            });
         } else {
             answerDisplay.style.display = 'none';
         }
