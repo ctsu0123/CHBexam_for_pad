@@ -232,26 +232,20 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'option';
                 
-                // 創建單選按鈕
-                const radioId = `option${index}`;
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'answer';
-                radio.id = radioId;
-                radio.value = optionNumber.toString();
-                
-                // 創建標籤
-                const label = document.createElement('label');
-                label.htmlFor = radioId;
-                label.textContent = `(${optionNumber}) ${optionText}`;
+                // 創建選項文字
+                const optionTextElement = document.createElement('div');
+                optionTextElement.className = 'option-text';
+                optionTextElement.textContent = `(${optionNumber}) ${optionText}`;
                 
                 // 添加點擊事件
                 optionDiv.addEventListener('click', () => showAnswer(optionNumber.toString(), question, mode));
                 
                 // 添加元素到 DOM
-                optionDiv.appendChild(radio);
-                optionDiv.appendChild(label);
+                optionDiv.appendChild(optionTextElement);
                 optionsContainer.appendChild(optionDiv);
+                
+                // 為選項添加 data-value 屬性，用於答案比對
+                optionDiv.dataset.value = optionNumber.toString();
             }
         });
     }
@@ -388,9 +382,7 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
 }
 
 // 顯示答案
-function showAnswer(selectedOption, question, mode) {
-    if (mode === 'browse-with-answer') return;
-    
+export function showAnswer(selectedOption, question, mode) {
     const answerDisplay = document.getElementById('answerDisplay');
     if (!answerDisplay) return;
     
@@ -418,17 +410,14 @@ function showAnswer(selectedOption, question, mode) {
     
     answerDisplay.style.display = 'block';
     
-    // 標示正確答案
+    // 標示正確答案和錯誤答案
     document.querySelectorAll('.option').forEach(opt => {
-        // 獲取選項的 input 元素
-        const input = opt.querySelector('input[type="radio"]');
-        if (input) {
-            const optValue = input.value; // 這會是 "1", "2", "3" 或 "4"
-            if (optValue === correctAnswerNumber.toString()) {
-                opt.classList.add('correct');
-            } else if (optValue === selectedOption) {
-                opt.classList.add('incorrect');
-            }
+        // 使用 data-value 屬性來比對選項
+        const optValue = opt.dataset.value;
+        if (optValue === correctAnswerNumber.toString()) {
+            opt.classList.add('correct');
+        } else if (optValue === selectedOption) {
+            opt.classList.add('incorrect');
         }
     });
 }
