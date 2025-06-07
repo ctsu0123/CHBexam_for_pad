@@ -78,27 +78,61 @@ export function parseQuestions(data) {
             // 1. (1)選項A (2)選項B (3)選項C (4)選項D
             // 2. A.選項A B.選項B C.選項C D.選項D
             // 3. 1.選項A 2.選項B 3.選項C 4.選項D
+            // 4. 換行格式的選項
             let options = [];
-            let optionPatterns = [
-                // 格式: (1)選項A (2)選項B
-                { 
-                    regex: /\(([1-4])\)\s*([^(]+)/g, 
-                    getIndex: (match) => parseInt(match[1]) - 1 
-                },
-                // 格式: A.選項A B.選項B
-                { 
-                    regex: /([A-D])\.\s*([^A-D]+)/g, 
-                    getIndex: (match) => match[1].charCodeAt(0) - 'A'.charCodeAt(0) 
-                },
-                // 格式: 1.選項A 2.選項B
-                { 
-                    regex: /(\d+)\.\s*([^\d]+)/g, 
-                    getIndex: (match) => parseInt(match[1]) - 1 
-                }
-            ];
             
-            // 如果還沒有解析出選項，嘗試使用正則表達式匹配
+            // 首先嘗試處理換行格式的選項
+            const lines = optionsText.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length >= 4) {
+                const lineBasedOptions = [];
+                let isValid = true;
+                
+                for (const line of lines) {
+                    // 匹配 (1) 選項A 或 1. 選項A 或 1) 選項A 等格式
+                    const match = line.match(/^\s*[\(（]?\s*(\d)\s*[\).、]\s*([^\r\n]+)/);
+                    if (match) {
+                        const index = parseInt(match[1]) - 1;
+                        const text = match[2].trim();
+                        if (index >= 0 && index < 4) {
+                            lineBasedOptions[index] = text;
+                        } else {
+                            isValid = false;
+                            break;
+                        }
+                    } else {
+                        isValid = false;
+                        break;
+                    }
+                }
+                
+                if (isValid && lineBasedOptions.filter(Boolean).length >= 2) {
+                    options = lineBasedOptions;
+                }
+            }
+            
+            // 如果換行解析失敗，嘗試其他模式
             if (options.length === 0) {
+                const optionPatterns = [
+                    { 
+                        // 匹配 (1) 選項A 格式
+                        regex: /[\(（]\s*(\d)\s*[\）)]\s*([^\r\n]+)/g, 
+                        getIndex: (match) => parseInt(match[1]) - 1,
+                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
+                    },
+                    { 
+                        // 匹配 A. 選項A 格式
+                        regex: /([A-D])\.\s*([^A-D\n]+)/g, 
+                        getIndex: (match) => match[1].charCodeAt(0) - 'A'.charCodeAt(0),
+                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
+                    },
+                    { 
+                        // 匹配 1. 選項A 格式
+                        regex: /(\d+)\.\s*([^\d\n]+)/g, 
+                        getIndex: (match) => parseInt(match[1]) - 1,
+                        cleanValue: (val) => val.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '')
+                    }
+                ];
+                
                 for (const pattern of optionPatterns) {
                     const matches = [];
                     let match;
