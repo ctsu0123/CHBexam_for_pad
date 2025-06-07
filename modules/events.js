@@ -69,15 +69,15 @@ import { startQuiz } from './questions.js';
 
 // 開始測驗的事件處理函數
 function handleStartQuiz() {
-    if (!currentMode) {
+    if (!appCurrentMode) {
         showErrorMessage('請選擇測驗模式');
         return;
     }
     
     // 呼叫 questions.js 中的 startQuiz 函數
-    const success = startQuiz(currentMode, 10); // 預設 10 題
+    const success = startQuiz(appCurrentMode, 10); // 預設 10 題
     if (success) {
-        console.log('開始測驗，模式:', currentMode);
+        console.log('開始測驗，模式:', appCurrentMode);
     }
 }
 
