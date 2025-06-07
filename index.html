@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPad 專用測驗系統 v1.60</title>
+    <title>iPad 專用測驗系統 v1.61</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="modules/app.js" defer></script>
+    <!-- 使用 nomodule 屬性提供回退方案 -->
+    <script type="module" src="modules/app.js"></script>
+    <script nomodule>
+        alert('您的瀏覽器不支援 ES 模組，請使用最新版本的 Chrome、Firefox 或 Safari 瀏覽器');
+    </script>
 </head>
 <body>
     <div class="container">
