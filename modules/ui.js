@@ -225,20 +225,19 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
         
-        const options = ['A', 'B', 'C', 'D'];
+        // 使用 1-4 作為選項標籤
+        const options = ['1', '2', '3', '4'];
         options.forEach(opt => {
             const optionText = question[`option${opt}`];
             if (optionText) {
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'option';
-                optionDiv.textContent = `${opt}. ${optionText}`;
+                // 顯示為 (1) 選項內容 格式
+                optionDiv.textContent = `(${opt}) ${optionText}`;
                 optionDiv.addEventListener('click', () => showAnswer(opt, question, mode));
                 
-                // 將數字答案轉換為字母進行比較
-                let correctAnswer = question.originalAnswer;
-                if (/^[1-4]$/.test(correctAnswer)) {
-                    correctAnswer = String.fromCharCode(64 + parseInt(correctAnswer));
-                }
+                // 直接使用數字答案進行比較
+                const correctAnswer = question.originalAnswer;
                 
                 // 如果是含答案模式，直接標示正確答案
                 if (mode === 'browse-with-answer' && opt === correctAnswer) {
@@ -254,12 +253,9 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
     const answerDisplay = document.getElementById('answerDisplay');
     if (answerDisplay) {
         if (mode === 'browse-with-answer') {
-            let displayAnswer = question.originalAnswer || '';
-            if (/^[1-4]$/.test(displayAnswer)) {
-                displayAnswer = `選項${String.fromCharCode(64 + parseInt(displayAnswer))}`;
-            }
+            const displayAnswer = question.originalAnswer || '';
             answerDisplay.style.display = 'block';
-            answerDisplay.textContent = `正確答案：${displayAnswer}`;
+            answerDisplay.textContent = `正確答案：(${displayAnswer})`;
         } else {
             answerDisplay.style.display = 'none';
         }
@@ -276,19 +272,23 @@ function showAnswer(selectedOption, question, mode) {
     const answerDisplay = document.getElementById('answerDisplay');
     if (!answerDisplay) return;
     
-    // 將數字答案轉換為字母（1->A, 2->B, 3->C, 4->D）
-    let correctAnswer = question.originalAnswer || '';
-    if (/^[1-4]$/.test(correctAnswer)) {
-        correctAnswer = String.fromCharCode(64 + parseInt(correctAnswer));
-    }
+    // 獲取正確答案的索引（0-based）
+    const correctAnswerIndex = question.answer;
+    // 獲取正確答案的內容
+    const correctAnswerText = question.options[correctAnswerIndex] || '';
+    // 獲取正確答案的編號（1-based）
+    const correctAnswerNumber = correctAnswerIndex + 1;
     
-    if (selectedOption === correctAnswer) {
-        answerDisplay.innerHTML = `✅ 正確！答案是：選項${correctAnswer}`;
+    // 獲取選中的選項編號（如果有的話）
+    const selectedNumber = selectedOption ? parseInt(selectedOption) : null;
+    
+    if (selectedNumber === correctAnswerNumber) {
+        answerDisplay.innerHTML = `✅ 正確！答案是：(${correctAnswerNumber})`;
         answerDisplay.style.background = 'rgba(76, 175, 80, 0.2)';
         answerDisplay.style.borderColor = '#4CAF50';
         answerDisplay.style.color = '#81c784';
     } else {
-        answerDisplay.innerHTML = `❌ 錯誤！正確答案是：選項${correctAnswer}`;
+        answerDisplay.innerHTML = `❌ 錯誤！正確答案是：(${correctAnswerNumber})`;
         answerDisplay.style.background = 'rgba(244, 67, 54, 0.2)';
         answerDisplay.style.borderColor = '#f44336';
         answerDisplay.style.color = '#ef5350';
@@ -298,9 +298,15 @@ function showAnswer(selectedOption, question, mode) {
     
     // 標示正確答案
     document.querySelectorAll('.option').forEach(opt => {
-        const optText = opt.textContent.charAt(0);
-        if (optText === correctAnswer) {
-            opt.classList.add('correct');
+        // 從 (1) 選項內容 中提取數字
+        const match = opt.textContent.match(/\((\d)\)/);
+        if (match && match[1]) {
+            const optNumber = match[1];
+            if (optNumber === correctAnswer) {
+                opt.classList.add('correct');
+            } else if (optNumber === selectedOption) {
+                opt.classList.add('incorrect');
+            }
         }
     });
 }

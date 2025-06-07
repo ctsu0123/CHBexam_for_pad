@@ -57,13 +57,14 @@ export function displayQuestion() {
                 if (option) {  // 只處理有值的選項
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
+                    const optionNumber = index + 1; // 轉換為 1-based 索引
                     optionElement.innerHTML = `
-                        <input type="radio" name="answer" id="option${index}" value="${String.fromCharCode(65 + index)}">
-                        <label for="option${index}">${String.fromCharCode(65 + index)}. ${option}</label>
+                        <input type="radio" name="answer" id="option${index}" value="${optionNumber}">
+                        <label for="option${index}">(${optionNumber}) ${option}</label>
                     `;
                     optionsContainer.appendChild(optionElement);
                     
-                    console.log(`選項 ${String.fromCharCode(65 + index)}:`, option);
+                    console.log(`選項 (${optionNumber}):`, option);
                 }
             });
             
