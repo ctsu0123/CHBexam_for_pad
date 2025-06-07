@@ -263,19 +263,46 @@ export function setFilteredQuestions(questions) {
 
 // 開始測驗
 export function startQuiz(mode, count = 10) {
+    console.log('開始測驗，模式:', mode, '題數:', count);
+    
     if (questions.length === 0) {
-        showErrorMessage('請先上傳題目檔案');
+        const errorMsg = '請先上傳題目檔案';
+        console.error(errorMsg);
+        showErrorMessage(errorMsg);
         return false;
     }
 
-    // 準備題目列表
-    if (mode === 'random') {
-        const shuffled = [...questions].sort(() => Math.random() - 0.5);
-        filteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
-    } else {
-        filteredQuestions = [...questions];
-    }
+    try {
+        // 準備題目列表
+        if (mode === 'random') {
+            console.log('隨機選擇', count, '題');
+            const shuffled = [...questions].sort(() => Math.random() - 0.5);
+            filteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+        } else {
+            console.log('使用全部題目，共', questions.length, '題');
+            filteredQuestions = [...questions];
+        }
 
-    currentQuestionIndex = 0;
-    return true;
+        currentQuestionIndex = 0;
+        
+        // 觸發更新事件
+        console.log('觸發 questionsUpdated 事件，過濾後題數:', filteredQuestions.length);
+        document.dispatchEvent(questionUpdatedEvent);
+        
+        // 顯示第一題
+        if (filteredQuestions.length > 0) {
+            console.log('顯示第 1 題，共', filteredQuestions.length, '題');
+            displayQuestion();
+        } else {
+            console.warn('沒有可用的題目');
+            showWarningMessage('沒有可用的題目，請檢查題庫');
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('開始測驗時發生錯誤:', error);
+        showErrorMessage('開始測驗時發生錯誤: ' + error.message);
+        return false;
+    }
 }
