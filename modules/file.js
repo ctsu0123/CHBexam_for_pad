@@ -1,6 +1,6 @@
 import { saveQuestionsToDB } from './db.js';
 import { parseQuestions, setQuestions } from './questions.js';
-import { showSuccessMessage, showErrorMessage, updateQuestionCount } from './ui.js';
+import { showSuccessMessage, showErrorMessage, updateQuestionCount, showLoadingMessage } from './ui.js';
 
 // 處理檔案上傳
 export async function handleFileUpload(event) {

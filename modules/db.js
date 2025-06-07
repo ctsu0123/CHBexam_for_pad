@@ -119,13 +119,19 @@ export async function saveQuestionsToDB(questions) {
                         successCount++;
                         console.log(`題目 ${index + 1}/${questions.length} 儲存成功`);
                         
+                        // 檢查是否所有題目都處理完成
                         if (successCount + errorCount === questions.length) {
                             if (errorCount > 0) {
                                 console.warn(`儲存完成，成功 ${successCount} 題，失敗 ${errorCount} 題`);
+                                if (successCount > 0) {
+                                    resolve(successCount); // 部分成功
+                                } else {
+                                    reject(new Error('所有題目儲存失敗'));
+                                }
                             } else {
                                 console.log(`所有 ${successCount} 題已成功儲存`);
+                                resolve(successCount); // 全部成功
                             }
-                            resolve(successCount);
                         }
                     };
                     

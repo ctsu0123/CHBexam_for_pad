@@ -34,7 +34,7 @@ export function setupEventListeners() {
     // 開始測驗按鈕
     const startBtn = document.getElementById('startQuizBtn');
     if (startBtn) {
-        startBtn.addEventListener('click', startQuiz);
+        startBtn.addEventListener('click', handleStartQuiz);
     }
 
     // 搜尋按鈕
@@ -64,15 +64,21 @@ export function setupEventListeners() {
     }
 }
 
-// 開始測驗
-function startQuiz() {
+// 從 questions.js 導入 startQuiz 函數
+import { startQuiz } from './questions.js';
+
+// 開始測驗的事件處理函數
+function handleStartQuiz() {
     if (!currentMode) {
         showErrorMessage('請選擇測驗模式');
         return;
     }
     
-    // 這裡可以加入開始測驗的邏輯
-    console.log('開始測驗，模式:', currentMode);
+    // 呼叫 questions.js 中的 startQuiz 函數
+    const success = startQuiz(currentMode, 10); // 預設 10 題
+    if (success) {
+        console.log('開始測驗，模式:', currentMode);
+    }
 }
 
 // 觸控事件處理
@@ -134,8 +140,5 @@ function handleTouchEnd() {
     }
 }
 
-// 顯示錯誤訊息
-function showErrorMessage(message) {
-    console.error('錯誤:', message);
-    // 這裡可以添加顯示錯誤訊息的 UI 邏輯
-}
+// 從 ui.js 導入 showErrorMessage 函數
+import { showErrorMessage } from './ui.js';
