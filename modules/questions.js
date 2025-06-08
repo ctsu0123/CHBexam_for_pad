@@ -273,12 +273,33 @@ export function startQuiz(mode, count = 10) {
         // 準備題目列表
         let tempFilteredQuestions;
         if (mode === 'random') {
-            console.log('隨機選擇', count, '題');
-            const shuffled = [...questions].sort(() => Math.random() - 0.5);
-            tempFilteredQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+            // 確保題數不超過總題數
+            const questionCount = Math.min(parseInt(count) || 10, questions.length);
+            console.log(`隨機選擇 ${questionCount} 題，總題庫: ${questions.length} 題`);
+            
+            // 創建題號數組並洗牌
+            const questionIndices = Array.from({length: questions.length}, (_, i) => i);
+            for (let i = questionIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionIndices[i], questionIndices[j]] = [questionIndices[j], questionIndices[i]];
+            }
+            
+            // 選取指定數量的題目
+            tempFilteredQuestions = questionIndices
+                .slice(0, questionCount)
+                .map(index => ({
+                    ...questions[index],
+                    originalQuestionNumber: questions[index].number // 保存原始題號
+                }));
+                
+            console.log('隨機選取的題目編號:', tempFilteredQuestions.map(q => q.originalQuestionNumber));
         } else {
             console.log('使用全部題目，共', questions.length, '題');
-            tempFilteredQuestions = [...questions];
+            // 為每個題目添加原始題號
+            tempFilteredQuestions = questions.map(q => ({
+                ...q,
+                originalQuestionNumber: q.number
+            }));
         }
         
         // 設置過濾後的題目
