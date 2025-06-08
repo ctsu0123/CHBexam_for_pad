@@ -1,5 +1,5 @@
 // 導入其他模組
-import { handleFileUpload } from './file.js';
+import { handleFileUpload, downloadTemplate } from './file.js';
 import { handleSearch } from './search.js';
 import { navigateQuestion, jumpToQuestion } from './navigation.js';
 
@@ -35,6 +35,12 @@ export function setupEventListeners() {
     const startBtn = document.getElementById('startQuizBtn');
     if (startBtn) {
         startBtn.addEventListener('click', handleStartQuiz);
+    }
+    
+    // 下載範例檔案按鈕
+    const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+    if (downloadTemplateBtn) {
+        downloadTemplateBtn.addEventListener('click', downloadTemplate);
     }
 
     // 搜尋按鈕

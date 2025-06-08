@@ -137,32 +137,50 @@ export async function handleFileUpload(event) {
 }
 
 // 下載範例檔案
-export function downloadTemplate() {
-    // 建立範例資料
-    const exampleData = [
-        ['題號', '答案', '題目', '選項'],
-        [1, 'A', '這是第一題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D'],
-        [2, 'B', '這是第二題的題目', 'A.選項A B.選項B C.選項C D.選項D'],
-        [3, 'C', '這是第三題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D'],
-        [4, 'D', '這是第四題的題目', 'A.選項A B.選項B C.選項C D.選項D']
-    ];
+export async function downloadTemplate() {
+    // 顯示載入中訊息
+    const loadingMessage = showLoadingMessage('準備範例檔案中...');
     
-    // 建立工作簿
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(exampleData);
-    
-    // 設定欄位寬度
-    const wscols = [
-        { wch: 10 }, // 題號
-        { wch: 10 }, // 答案
-        { wch: 60 }, // 題目
-        { wch: 60 }  // 選項
-    ];
-    ws['!cols'] = wscols;
-    
-    // 將工作表加入工作簿
-    XLSX.utils.book_append_sheet(wb, ws, '題目範例');
-    
-    // 匯出 Excel 檔案
-    XLSX.writeFile(wb, '題目範例.xlsx');
+    try {
+        // 直接使用內建範例資料
+        await new Promise(resolve => setTimeout(resolve, 500)); // 模擬載入延遲
+        
+        // 建立範例資料
+        const exampleData = [
+            ['題號', '答案', '題目', '選項'],
+            [1, '1', '這是第一題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D'],
+            [2, '2', '這是第二題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D'],
+            [3, '3', '這是第三題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D'],
+            [4, '4', '這是第四題的題目', '(1)選項A (2)選項B (3)選項C (4)選項D']
+        ];
+        
+        // 建立工作簿
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(exampleData);
+        
+        // 設定欄位寬度
+        const wscols = [
+            { wch: 10 }, // 題號
+            { wch: 10 }, // 答案
+            { wch: 60 }, // 題目
+            { wch: 60 }  // 選項
+        ];
+        ws['!cols'] = wscols;
+        
+        // 將工作表加入工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '題目範例');
+        
+        // 匯出 Excel 檔案
+        XLSX.writeFile(wb, '題目範例.xlsx');
+        
+        showSuccessMessage('範例檔案下載成功！');
+    } catch (error) {
+        console.error('生成範例檔案時發生錯誤:', error);
+        showErrorMessage('生成範例檔案失敗: ' + error.message);
+    } finally {
+        // 移除載入訊息
+        if (loadingMessage && loadingMessage.remove) {
+            loadingMessage.remove();
+        }
+    }
 }
