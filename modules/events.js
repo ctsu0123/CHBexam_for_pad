@@ -74,10 +74,20 @@ function handleStartQuiz() {
         return;
     }
     
+    // 獲取使用者設定的題數
+    let questionCount = 10; // 預設值
+    if (appCurrentMode === 'random') {
+        const countInput = document.getElementById('questionCount');
+        if (countInput) {
+            questionCount = parseInt(countInput.value) || 10;
+            console.log('使用者設定的題數:', questionCount);
+        }
+    }
+    
     // 呼叫 questions.js 中的 startQuiz 函數
-    const success = startQuiz(appCurrentMode, 10); // 預設 10 題
+    const success = startQuiz(appCurrentMode, questionCount);
     if (success) {
-        console.log('開始測驗，模式:', appCurrentMode);
+        console.log('開始測驗，模式:', appCurrentMode, '題數:', questionCount);
         // 顯示第一題
         if (typeof displayQuestion === 'function') {
             displayQuestion();
