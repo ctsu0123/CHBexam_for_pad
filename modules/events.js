@@ -48,6 +48,20 @@ export function setupEventListeners() {
     if (searchBtn) {
         searchBtn.addEventListener('click', handleSearch);
     }
+    
+    // Excel 轉換工具按鈕
+    const showConvertToolBtn = document.getElementById('showConvertToolBtn');
+    if (showConvertToolBtn) {
+        showConvertToolBtn.addEventListener('click', () => {
+            try {
+                // 在新分頁中開啟轉換工具
+                window.open('convert/excel_converter.html', '_blank');
+            } catch (error) {
+                console.error('開啟 Excel 轉換工具時發生錯誤:', error);
+                showErrorMessage('無法開啟 Excel 轉換工具: ' + error.message);
+            }
+        });
+    }
 
     // 導航按鈕
     const prevBtn = document.getElementById('prevBtn');
