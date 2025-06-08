@@ -107,7 +107,7 @@ function showSearchResults(searchResults, searchTerm) {
         <body>
             <h1>搜尋結果</h1>
             <div class="search-info">
-                <p>搜尋關鍵字: <strong>${escapeHtml(searchTerm) || '（顯示所有題目）'}</strong> | 共找到 <strong>${results.length}</strong> 筆結果</p>
+                <p>搜尋關鍵字: <strong>${escapeHtml(searchTerm) || '（顯示所有題目）'}</strong> | 共找到 <strong>${searchResults.length}</strong> 筆結果</p>
                 <button onclick="window.print()" class="no-print" style="padding: 8px 16px; margin: 10px 0; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">列印結果</button>
             </div>
             <table>
@@ -128,10 +128,10 @@ function showSearchResults(searchResults, searchTerm) {
                             <td class="answer">${escapeHtml(q.answer || '')}</td>
                             <td>${highlightText(safeQuestion, searchTerm)}</td>
                             <td>
-                                <div><strong>A.</strong> ${highlightText(escapeHtml(q.optionA || ''), searchTerm)}</div>
-                                <div><strong>B.</strong> ${highlightText(escapeHtml(q.optionB || ''), searchTerm)}</div>
-                                <div><strong>C.</strong> ${highlightText(escapeHtml(q.optionC || ''), searchTerm)}</div>
-                                <div><strong>D.</strong> ${highlightText(escapeHtml(q.optionD || ''), searchTerm)}</div>
+                                <div>${highlightText(escapeHtml(q.option1 || q.optionA || ''), searchTerm)}</div>
+                                <div>${highlightText(escapeHtml(q.option2 || q.optionB || ''), searchTerm)}</div>
+                                <div>${highlightText(escapeHtml(q.option3 || q.optionC || ''), searchTerm)}</div>
+                                <div>${highlightText(escapeHtml(q.option4 || q.optionD || ''), searchTerm)}</div>
                             </td>
                         </tr>`;
                     }).join('')}
@@ -183,10 +183,10 @@ export function handleSearch() {
                 try {
                     const searchableFields = [
                         q.question || '',
-                        q.optionA || '',
-                        q.optionB || '',
-                        q.optionC || '',
-                        q.optionD || '',
+                        q.option1 || '',
+                        q.option2 || '',
+                        q.option3 || '',
+                        q.option4 || '',
                         q.number ? q.number.toString() : ''
                     ];
                     

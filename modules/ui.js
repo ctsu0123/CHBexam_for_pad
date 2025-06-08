@@ -232,16 +232,24 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'option';
                 
-                // 創建選項文字
-                const optionTextElement = document.createElement('div');
-                optionTextElement.className = 'option-text';
-                optionTextElement.textContent = `(${optionNumber}) ${optionText}`;
+                // 創建單選按鈕
+                const radioInput = document.createElement('input');
+                radioInput.type = 'radio';
+                radioInput.name = 'option';
+                radioInput.id = `option-${optionNumber}`;
+                radioInput.value = optionNumber.toString();
+                
+                // 創建選項標籤
+                const label = document.createElement('label');
+                label.htmlFor = `option-${optionNumber}`;
+                label.textContent = `(${optionNumber}) ${optionText}`;
                 
                 // 添加點擊事件
                 optionDiv.addEventListener('click', () => showAnswer(optionNumber.toString(), question, mode));
                 
                 // 添加元素到 DOM
-                optionDiv.appendChild(optionTextElement);
+                optionDiv.appendChild(radioInput);
+                optionDiv.appendChild(label);
                 optionsContainer.appendChild(optionDiv);
                 
                 // 為選項添加 data-value 屬性，用於答案比對
@@ -282,31 +290,33 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
             
             let found = false;
             
-            // 方法1: 比對選項值
-            options.forEach((opt, index) => {
+            // 方法1: 比對選項值（精確匹配）
+            options.forEach((opt) => {
                 const input = opt.querySelector('input[type="radio"]');
                 if (!input) return;
                 
                 const optValue = input.value.trim();
-                console.log(`選項 ${index + 1} 值:`, optValue);
+                console.log('比對選項值:', { optValue, correctAnswer });
                 
                 // 清除之前的高亮
                 opt.classList.remove('correct');
                 
                 // 檢查選項值是否等於正確答案
-                if (optValue === correctAnswer) {
+                if (optValue === correctAnswer.toString()) {
                     opt.classList.add('correct');
                     found = true;
                     console.log('通過值比對標記正確答案:', optValue);
+                    return; // 找到後立即返回
                 }
             });
             
-            // 方法2: 如果值比對失敗，嘗試使用索引
-            if (!found) {
+            // 方法2: 如果值比對失敗，嘗試使用索引（答案為數字時）
+            if (!found && /^\d+$/.test(correctAnswer)) {
                 console.warn('無法通過值比對找到正確答案，嘗試使用索引');
                 try {
                     const answerIndex = parseInt(correctAnswer) - 1;
-                    if (!isNaN(answerIndex) && answerIndex >= 0 && answerIndex < options.length) {
+                    console.log('嘗試使用索引:', { answerIndex, optionsCount: options.length });
+                    if (answerIndex >= 0 && answerIndex < options.length) {
                         options[answerIndex].classList.add('correct');
                         found = true;
                         console.log('通過索引標記正確答案，索引:', answerIndex);
@@ -319,15 +329,29 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
             // 方法3: 如果還是找不到，嘗試比對選項文字
             if (!found) {
                 console.warn('無法通過索引找到正確答案，嘗試比對選項文字');
-                options.forEach((opt, index) => {
+                options.forEach((opt) => {
                     const label = opt.querySelector('label');
                     if (!label) return;
                     
                     const labelText = label.textContent.trim();
-                    if (labelText.startsWith(`(${correctAnswer})`)) {
-                        opt.classList.add('correct');
-                        found = true;
-                        console.log('通過文字比對標記正確答案:', labelText);
+                    console.log('比對選項文字:', { labelText, correctAnswer });
+                    
+                    // 嘗試多種格式比對
+                    const patterns = [
+                        `^\\s*\\(?${correctAnswer}\\)?\\s*[.:、]?\\s*`,  // (1), 1), 1., 1:
+                        `^\\s*[（(]?${correctAnswer}[）)]?\\s*[.:、]?\\s*`,  // 中文括號
+                        `^\\s*${correctAnswer}\\.\\s*`,  // 1.
+                        `^\\s*${correctAnswer}\\s`  // 1 後跟空格
+                    ];
+                    
+                    for (const pattern of patterns) {
+                        const regex = new RegExp(pattern);
+                        if (regex.test(labelText)) {
+                            opt.classList.add('correct');
+                            found = true;
+                            console.log('通過文字比對標記正確答案:', labelText);
+                            return; // 找到後立即返回
+                        }
                     }
                 });
             }
@@ -352,21 +376,53 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
                 const options = document.querySelectorAll('.option');
                 let found = false;
                 
+                // 方法1: 直接比對選項值
                 options.forEach((opt) => {
                     const input = opt.querySelector('input[type="radio"]');
-                    if (input) {
-                        console.log('Checking option value:', input.value, 'vs correct:', correctAnswer);
-                        // 清除之前的高亮
-                        opt.classList.remove('correct');
-                        
-                        // 檢查選項值是否等於正確答案
-                        if (input.value === correctAnswer.toString()) {
-                            opt.classList.add('correct');
-                            found = true;
-                            console.log('Re-marked correct answer:', correctAnswer);
-                        }
+                    if (!input) return;
+                    
+                    const optValue = input.value.trim();
+                    console.log('Re-checking option value:', optValue, 'vs correct:', correctAnswer);
+                    
+                    // 清除之前的高亮
+                    opt.classList.remove('correct');
+                    
+                    // 檢查選項值是否等於正確答案
+                    if (optValue === correctAnswer.toString()) {
+                        opt.classList.add('correct');
+                        found = true;
+                        console.log('Re-marked correct answer by value:', correctAnswer);
                     }
                 });
+                
+                // 方法2: 如果值比對失敗，嘗試使用索引
+                if (!found && /^\d+$/.test(correctAnswer)) {
+                    console.log('Trying to mark by index for answer:', correctAnswer);
+                    const answerIndex = parseInt(correctAnswer) - 1;
+                    if (answerIndex >= 0 && answerIndex < options.length) {
+                        options[answerIndex].classList.add('correct');
+                        found = true;
+                        console.log('Re-marked correct answer by index:', answerIndex);
+                    }
+                }
+                
+                // 方法3: 如果還是找不到，嘗試比對選項文字
+                if (!found) {
+                    console.log('Trying to mark by option text for answer:', correctAnswer);
+                    options.forEach((opt) => {
+                        const label = opt.querySelector('label');
+                        if (!label) return;
+                        
+                        const labelText = label.textContent.trim();
+                        // 比對 (1) 或 1. 等格式
+                        const match = labelText.match(/^[\s(]*(\d+)[\s).]/);
+                        if (match && match[1] === correctAnswer) {
+                            opt.classList.add('correct');
+                            found = true;
+                            console.log('Re-marked correct answer by text match:', labelText);
+                        }
+                    });
+                }
                 
                 if (!found) {
                     console.warn('Could not find matching option for answer:', correctAnswer);
