@@ -232,24 +232,16 @@ export function displayQuestion(question, currentIndex, totalCount, mode) {
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'option';
                 
-                // 創建單選按鈕
-                const radioInput = document.createElement('input');
-                radioInput.type = 'radio';
-                radioInput.name = 'option';
-                radioInput.id = `option-${optionNumber}`;
-                radioInput.value = optionNumber.toString();
-                
-                // 創建選項標籤
-                const label = document.createElement('label');
-                label.htmlFor = `option-${optionNumber}`;
-                label.textContent = `(${optionNumber}) ${optionText}`;
+                // 創建選項內容
+                const optionContent = document.createElement('div');
+                optionContent.className = 'option-content';
+                optionContent.textContent = `(${optionNumber}) ${optionText}`;
                 
                 // 添加點擊事件
                 optionDiv.addEventListener('click', () => showAnswer(optionNumber.toString(), question, mode));
                 
                 // 添加元素到 DOM
-                optionDiv.appendChild(radioInput);
-                optionDiv.appendChild(label);
+                optionDiv.appendChild(optionContent);
                 optionsContainer.appendChild(optionDiv);
                 
                 // 為選項添加 data-value 屬性，用於答案比對
