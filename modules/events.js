@@ -1,7 +1,7 @@
 // 導入其他模組
 import { handleFileUpload } from './file.js';
 import { handleSearch } from './search.js';
-import { navigateQuestion } from './navigation.js';
+import { navigateQuestion, jumpToQuestion } from './navigation.js';
 
 // 應用程式狀態
 let appCurrentMode = '';
@@ -46,8 +46,37 @@ export function setupEventListeners() {
     // 導航按鈕
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const jumpInput = document.getElementById('jumpInput');
+    
     if (prevBtn) prevBtn.addEventListener('click', () => navigateQuestion(-1));
     if (nextBtn) nextBtn.addEventListener('click', () => navigateQuestion(1));
+    // 跳轉按鈕點擊事件
+    if (jumpBtn) {
+        jumpBtn.addEventListener('click', function() {
+            console.log('跳轉按鈕被點擊');
+            try {
+                jumpToQuestion();
+            } catch (error) {
+                console.error('執行跳轉時發生錯誤:', error);
+                showErrorMessage('執行跳轉時發生錯誤');
+            }
+        });
+    }
+    // 跳轉輸入框 Enter 鍵事件
+    if (jumpInput) {
+        jumpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                console.log('按下 Enter 鍵');
+                try {
+                    jumpToQuestion();
+                } catch (error) {
+                    console.error('執行跳轉時發生錯誤:', error);
+                    showErrorMessage('執行跳轉時發生錯誤');
+                }
+            }
+        });
+    }
 
     // 鍵盤導航
     document.addEventListener('keydown', function(e) {

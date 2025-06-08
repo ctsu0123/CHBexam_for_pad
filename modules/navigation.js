@@ -27,19 +27,37 @@ export function navigateQuestion(direction) {
 
 // 跳轉到指定題目
 export function jumpToQuestion() {
+    console.log('執行 jumpToQuestion 函數');
     try {
         const jumpInput = document.getElementById('jumpInput');
-        if (!jumpInput) return;
+        console.log('jumpInput:', jumpInput);
+        if (!jumpInput) {
+            console.error('錯誤：找不到 jumpInput 元素');
+            return;
+        }
         
+        console.log('輸入的值:', jumpInput.value);
         const targetIndex = parseInt(jumpInput.value) - 1;
+        console.log('目標索引:', targetIndex);
+        
         const filteredQuestions = getFilteredQuestions();
+        console.log('過濾後的題目數量:', filteredQuestions.length);
+        
+        if (isNaN(targetIndex)) {
+            console.error('錯誤：輸入的不是有效的數字');
+            showErrorMessage('請輸入有效的題號');
+            return;
+        }
         
         if (targetIndex >= 0 && targetIndex < filteredQuestions.length) {
+            console.log('正在跳轉到第', targetIndex + 1, '題');
             setCurrentQuestionIndex(targetIndex);
             displayQuestion();
             jumpInput.value = '';
         } else {
-            showErrorMessage('請輸入有效的題號 (1-' + filteredQuestions.length + ')');
+            const errorMsg = '請輸入有效的題號 (1-' + filteredQuestions.length + ')';
+            console.error('錯誤：', errorMsg);
+            showErrorMessage(errorMsg);
         }
     } catch (error) {
         console.error('跳轉題目時發生錯誤:', error);

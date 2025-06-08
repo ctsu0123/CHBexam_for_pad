@@ -117,13 +117,19 @@ export function parseQuestions(data) {
                 continue;
             }
             
-            // 簡化選項解析，直接使用 (1) (2) (3) (4) 作為選項
+            // 改進選項解析，支援多行選項
             let options = [];
-            const optionMatches = optionsText.matchAll(/\(\s*(\d)\s*\)\s*([^\r\n()]+)/g);
+            
+            // 方法1：嘗試解析 (1) 選項內容 格式
+            const optionMatches = optionsText.matchAll(/\(\s*(\d)\s*\)\s*([\s\S]*?)(?=\s*\(\d\)|$)/g);
             
             for (const match of optionMatches) {
                 const index = parseInt(match[1]) - 1; // 轉換為 0-based 索引
-                const text = match[2].trim();
+                let text = match[2].trim();
+                
+                // 清理文本：移除多餘的換行和空格
+                text = text.replace(/\s+/g, ' ').trim();
+                
                 if (index >= 0 && index < 4 && text) {
                     options[index] = text;
                 }
@@ -302,13 +308,12 @@ export function startQuiz(mode, count = 10) {
             }));
         }
         
-        // 設置過濾後的題目
+        // 設置過濾後的題目和當前索引
         setFilteredQuestions(tempFilteredQuestions);
-
         currentQuestionIndex = 0;
         
         // 驗證題目是否成功準備
-        if (filteredQuestions.length === 0) {
+        if (tempFilteredQuestions.length === 0) {
             console.warn('沒有可用的題目');
             showWarningMessage('沒有可用的題目，請檢查題庫');
             return false;
@@ -327,7 +332,7 @@ export function startQuiz(mode, count = 10) {
         }
 
         // 顯示第一題
-        console.log('顯示第 1 題，共', filteredQuestions.length, '題');
+        console.log('顯示第 1 題，共', tempFilteredQuestions.length, '題');
         const success = displayQuestion();
         if (!success) {
             console.error('顯示第一題失敗');
