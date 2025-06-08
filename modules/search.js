@@ -188,17 +188,28 @@ export function handleSearch() {
         } else {
             filteredQuestions = questions.filter(q => {
                 try {
+                    // 準備搜尋欄位
                     const searchableFields = [
                         q.question || '',
-                        q.option1 || '',
-                        q.option2 || '',
-                        q.option3 || '',
-                        q.option4 || '',
                         q.number ? q.number.toString() : ''
                     ];
                     
+                    // 添加所有選項到搜尋範圍
+                    if (Array.isArray(q.options)) {
+                        q.options.forEach(opt => {
+                            if (opt) searchableFields.push(opt);
+                        });
+                    } else {
+                        // 向後兼容：檢查舊的 option1-4 或 optionA-D 屬性
+                        for (let i = 1; i <= 4; i++) {
+                            const opt = q[`option${i}`] || q[`option${String.fromCharCode(64 + i)}`];
+                            if (opt) searchableFields.push(opt);
+                        }
+                    }
+                    
+                    // 檢查是否有任何欄位包含搜尋關鍵字
                     return searchableFields.some(field => 
-                        field.toLowerCase().includes(searchTerm)
+                        field && field.toString().toLowerCase().includes(searchTerm)
                     );
                 } catch (e) {
                     console.error('過濾題目時發生錯誤:', e, q);
