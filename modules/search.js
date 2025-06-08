@@ -125,13 +125,20 @@ function showSearchResults(searchResults, searchTerm) {
                         return `
                         <tr>
                             <td>${escapeHtml(q.number || '')}</td>
-                            <td class="answer">${escapeHtml(q.answer || '')}</td>
+                            <td class="answer">
+                                ${escapeHtml(
+                                    q.originalAnswer || 
+                                    (typeof q.answer === 'number' ? q.answer + 1 : q.answer) || 
+                                    ''
+                                )}
+                            </td>
                             <td>${highlightText(safeQuestion, searchTerm)}</td>
                             <td>
-                                <div>${highlightText(escapeHtml(q.option1 || q.optionA || ''), searchTerm)}</div>
-                                <div>${highlightText(escapeHtml(q.option2 || q.optionB || ''), searchTerm)}</div>
-                                <div>${highlightText(escapeHtml(q.option3 || q.optionC || ''), searchTerm)}</div>
-                                <div>${highlightText(escapeHtml(q.option4 || q.optionD || ''), searchTerm)}</div>
+                                ${(q.options || []).map((opt, idx) => {
+                                    if (!opt) return '';
+                                    const optionText = `${idx + 1}. ${opt}`;
+                                    return `<div>${highlightText(escapeHtml(optionText), searchTerm)}</div>`;
+                                }).join('')}
                             </td>
                         </tr>`;
                     }).join('')}
